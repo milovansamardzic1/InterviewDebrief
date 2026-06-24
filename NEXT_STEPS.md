@@ -8,20 +8,20 @@ Each phase builds on the previous one. Complete them in order unless you have a 
 
 ## How this maps to 12-Factor
 
-| Factor | What it means for you |
-|--------|----------------------|
-| **I. Codebase** | One Git repo, many deploys (dev, staging, prod) |
-| **II. Dependencies** | All deps declared in `package.json`; lockfile committed |
-| **III. Config** | Secrets and env-specific values in environment variables, never in code |
-| **IV. Backing services** | PostgreSQL is a swappable resource via `DATABASE_URL` |
-| **V. Build, release, run** | `pnpm build` → deploy artifact → `pnpm start` |
-| **VI. Processes** | App is stateless; session/state lives in PostgreSQL or cookies |
-| **VII. Port binding** | Next.js binds to `PORT` (default 3000) |
-| **VIII. Concurrency** | Scale by running more app processes, not bigger ones |
-| **IX. Disposability** | Fast startup, graceful shutdown; no in-memory global state |
-| **X. Dev/prod parity** | Same PostgreSQL + same env var names across environments |
-| **XI. Logs** | Write to stdout/stderr; let the platform aggregate logs |
-| **XII. Admin processes** | Migrations and seeds run as one-off commands, not at runtime |
+| Factor                     | What it means for you                                                   |
+| -------------------------- | ----------------------------------------------------------------------- |
+| **I. Codebase**            | One Git repo, many deploys (dev, staging, prod)                         |
+| **II. Dependencies**       | All deps declared in `package.json`; lockfile committed                 |
+| **III. Config**            | Secrets and env-specific values in environment variables, never in code |
+| **IV. Backing services**   | PostgreSQL is a swappable resource via `DATABASE_URL`                   |
+| **V. Build, release, run** | `pnpm build` → deploy artifact → `pnpm start`                           |
+| **VI. Processes**          | App is stateless; session/state lives in PostgreSQL or cookies          |
+| **VII. Port binding**      | Next.js binds to `PORT` (default 3000)                                  |
+| **VIII. Concurrency**      | Scale by running more app processes, not bigger ones                    |
+| **IX. Disposability**      | Fast startup, graceful shutdown; no in-memory global state              |
+| **X. Dev/prod parity**     | Same PostgreSQL + same env var names across environments                |
+| **XI. Logs**               | Write to stdout/stderr; let the platform aggregate logs                 |
+| **XII. Admin processes**   | Migrations and seeds run as one-off commands, not at runtime            |
 
 ---
 
@@ -79,6 +79,7 @@ Each phase builds on the previous one. Complete them in order unless you have a 
    This also runs automatically on `pnpm install` via `postinstall`.
 
 **12-Factor notes:**
+
 - Schema changes are **admin processes** — run migrations as one-off commands in each environment, not inside request handlers.
 - Use the same migration files in dev, staging, and prod (Factor X).
 - Swap databases by changing `DATABASE_URL` only — no code changes (Factor IV).
@@ -87,30 +88,54 @@ Each phase builds on the previous one. Complete them in order unless you have a 
 
 ## Phase 3 — First feature module (Factor VI, server-first)
 
-**Goal:** Add one vertical slice using the feature-based layout.
+**Goal:** Add one vertical slice using the layered backend layout.
 
-Create your first feature under `src/features/<feature-name>/`:
+### Web app (`src/`)
 
 ```
 src/features/<feature-name>/
 ├── components/    # UI for this feature only
-├── actions/       # Server Actions ("use server")
-├── queries/       # Server-side data fetching
-├── schemas/       # Input validation (add Zod when you need it)
-└── types/         # Feature-specific TypeScript types
+└── actions/       # Thin Server Actions that proxy to the API (mutations)
+
+src/lib/api/
+├── client.ts      # Low-level fetch helper
+├── applications.ts
+└── dashboard.ts   # Typed feature API clients
+```
+
+### Shared contracts (`packages/contracts/`)
+
+```
+packages/contracts/src/
+├── enums.ts
+├── job-applications.ts
+└── dashboard.ts   # DTO types shared by API and web
+```
+
+### API app (`apps/api/`)
+
+```
+apps/api/src/modules/<feature-name>/
+├── <feature>.service.ts   # Business logic and Prisma queries
+└── <feature>.schema.ts    # Zod validation for API inputs
+
+apps/api/src/routes/       # Thin Hono route handlers
+apps/api/src/db/client.ts  # Prisma singleton
 ```
 
 **Conventions:**
-- Default to **Server Components** — no `"use client"` unless you need interactivity, hooks, or browser APIs.
-- Put data access in `queries/` or Server Actions, using the Prisma singleton at [`src/lib/db/prisma.ts`](src/lib/db/prisma.ts).
-- Keep shared UI in `src/components/`; feature-specific UI stays in the feature folder.
-- Add shadcn components as needed:
 
-  ```powershell
-  pnpm dlx shadcn@latest add button
-  ```
+- Default to **Server Components** — no `"use client"` unless you need interactivity, hooks, or browser APIs.
+- **Never import Prisma in `src/`** — all database access lives in `apps/api`.
+- Pages call typed clients in `src/lib/api/*`; DTO types come from `@interwjuer/contracts`.
+- Server Actions (mutations) validate optionally on the client, but always validate in the API module.
+- Keep shared UI in `src/components/`; feature-specific UI stays in the feature folder.
+- Run both apps locally with `pnpm dev` (API on port 4000, web on port 3000).
+
+See [`docs/architecture.md`](docs/architecture.md) for the full layer diagram and rules.
 
 **12-Factor notes:**
+
 - Do not store session or user state in global variables or local files (Factor VI, IX).
 - Persist durable state in PostgreSQL; use HTTP cookies for auth tokens when you add auth.
 
@@ -128,13 +153,13 @@ When you are ready (not required on day one):
 
 **Minimum env vars to plan for as the app grows:**
 
-| Variable | Scope | Purpose |
-|----------|-------|---------|
-| `DATABASE_URL` | Server | PostgreSQL connection |
-| `NODE_ENV` | Server | `development` / `production` / `test` |
-| `NEXT_PUBLIC_APP_URL` | Public | Canonical app URL for links and redirects |
-| Auth secrets | Server | Add when you implement auth (e.g. session signing key) |
-| Third-party API keys | Server | Add per integration, never `NEXT_PUBLIC_*` |
+| Variable              | Scope  | Purpose                                                |
+| --------------------- | ------ | ------------------------------------------------------ |
+| `DATABASE_URL`        | Server | PostgreSQL connection                                  |
+| `NODE_ENV`            | Server | `development` / `production` / `test`                  |
+| `NEXT_PUBLIC_APP_URL` | Public | Canonical app URL for links and redirects              |
+| Auth secrets          | Server | Add when you implement auth (e.g. session signing key) |
+| Third-party API keys  | Server | Add per integration, never `NEXT_PUBLIC_*`             |
 
 Update [`.env.example`](.env.example) every time you add a new variable.
 
@@ -196,6 +221,7 @@ Fix issues before pushing. The lockfile (`pnpm-lock.yaml`) must stay committed s
 3. Ensure Node.js meets Prisma requirements (20.19+ for Prisma 7; currently pinned to Prisma 6 for Node 20.17).
 
 **At runtime:**
+
 - The platform sets `PORT`; Next.js respects it automatically (Factor VII).
 - Scale by adding instances, not by storing state in memory (Factor VIII).
 - Log with `console.log` / `console.error` — avoid writing log files inside the container (Factor XI).
@@ -234,17 +260,17 @@ Keep each step as a self-contained feature module. Avoid shared abstractions unt
 
 ## Useful commands reference
 
-| Command | When to use |
-|---------|-------------|
-| `pnpm dev` | Local development |
-| `pnpm build` | Verify production build |
-| `pnpm start` | Run production build locally |
-| `pnpm lint` | Check ESLint rules |
-| `pnpm format` | Auto-format with Prettier |
-| `pnpm db:migrate` | Create + apply migration (dev) |
-| `pnpm exec prisma migrate deploy` | Apply migrations (staging/prod) |
-| `pnpm db:push` | Prototype schema without migration (dev only) |
-| `pnpm dlx shadcn@latest add <name>` | Add a UI component |
+| Command                             | When to use                                   |
+| ----------------------------------- | --------------------------------------------- |
+| `pnpm dev`                          | Local development                             |
+| `pnpm build`                        | Verify production build                       |
+| `pnpm start`                        | Run production build locally                  |
+| `pnpm lint`                         | Check ESLint rules                            |
+| `pnpm format`                       | Auto-format with Prettier                     |
+| `pnpm db:migrate`                   | Create + apply migration (dev)                |
+| `pnpm exec prisma migrate deploy`   | Apply migrations (staging/prod)               |
+| `pnpm db:push`                      | Prototype schema without migration (dev only) |
+| `pnpm dlx shadcn@latest add <name>` | Add a UI component                            |
 
 ---
 
@@ -254,7 +280,7 @@ Keep each step as a self-contained feature module. Avoid shared abstractions unt
 - Running migrations inside API routes or middleware
 - Global in-memory caches for user-specific data
 - Client-side data fetching libraries (React Query, SWR) before you need them
-- Premature shared abstractions (generic repositories, service layers)
+- Premature shared abstractions (generic repositories) before you see real duplication across modules
 - Committing `.env` or any file containing secrets
 
 ---
@@ -263,13 +289,13 @@ Keep each step as a self-contained feature module. Avoid shared abstractions unt
 
 These are intentionally **not** in the scaffold. Add them when you have a concrete need:
 
-| Need | Options to evaluate |
-|------|---------------------|
-| Error tracking | Sentry, Bugsnag |
-| Email | Resend, Postmark, AWS SES |
-| File storage | S3, Cloudflare R2 |
-| Background jobs | Inngest, Trigger.dev, BullMQ + Redis |
-| CI/CD | GitHub Actions, platform-native pipelines |
-| Testing | Vitest + Playwright |
+| Need            | Options to evaluate                       |
+| --------------- | ----------------------------------------- |
+| Error tracking  | Sentry, Bugsnag                           |
+| Email           | Resend, Postmark, AWS SES                 |
+| File storage    | S3, Cloudflare R2                         |
+| Background jobs | Inngest, Trigger.dev, BullMQ + Redis      |
+| CI/CD           | GitHub Actions, platform-native pipelines |
+| Testing         | Vitest + Playwright                       |
 
 Keep each addition behind an env var and treat it as a backing service (Factor IV).

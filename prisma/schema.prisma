@@ -6,3 +6,147 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum ApplicationStatus {
+  APPLIED
+  SCREENING
+  INTERVIEWING
+  OFFER
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum InterviewRoundStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  jobApplications JobApplication[]
+
+  @@map("users")
+}
+
+model ApplicationSource {
+  id   String @id @default(cuid())
+  name String @unique
+
+  jobApplications JobApplication[]
+
+  @@map("application_sources")
+}
+
+model JobApplication {
+  id                  String            @id @default(cuid())
+  userId              String            @map("user_id")
+  company             String
+  position            String
+  applicationSourceId String            @map("application_source_id")
+  applicationDate     DateTime          @map("application_date")
+  location            String?
+  salaryMin           Int?              @map("salary_min")
+  salaryMax           Int?              @map("salary_max")
+  jobPostingUrl       String?           @map("job_posting_url")
+  jobDescription      String?           @map("job_description") @db.Text
+  applicationStatus   ApplicationStatus @default(APPLIED) @map("application_status")
+  rejectionReason     String?           @map("rejection_reason") @db.Text
+  notes               String?           @db.Text
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationSource ApplicationSource @relation(fields: [applicationSourceId], references: [id], onDelete: Restrict)
+  interviewRounds   InterviewRound[]
+
+  @@index([userId])
+  @@index([applicationStatus])
+  @@map("job_applications")
+}
+
+model InterviewType {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String? @db.Text
+
+  interviewRounds InterviewRound[]
+
+  @@map("interview_types")
+}
+
+model InterviewRound {
+  id               String               @id @default(cuid())
+  jobApplicationId String               @map("job_application_id")
+  interviewTypeId  String               @map("interview_type_id")
+  sortOrder        Int                  @map("order")
+  status           InterviewRoundStatus @default(SCHEDULED)
+  scheduledAt      DateTime?            @map("scheduled_at")
+  completedAt      DateTime?            @map("completed_at")
+  notes            String?              @db.Text
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  jobApplication   JobApplication    @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+  interviewType    InterviewType     @relation(fields: [interviewTypeId], references: [id], onDelete: Restrict)
+  questions        Question[]
+  skillEvaluations SkillEvaluation[]
+
+  @@index([jobApplicationId])
+  @@map("interview_rounds")
+}
+
+model Question {
+  id               String   @id @default(cuid())
+  interviewRoundId String   @map("interview_round_id")
+  question         String   @db.Text
+  myAnswer         String?  @map("my_answer") @db.Text
+  topic            String?
+  difficulty       Int?
+  notes            String?  @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  interviewRound InterviewRound @relation(fields: [interviewRoundId], references: [id], onDelete: Cascade)
+
+  @@index([interviewRoundId])
+  @@map("questions")
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  skillEvaluations SkillEvaluation[]
+
+  @@map("skills")
+}
+
+model SkillEvaluation {
+  id               String   @id @default(cuid())
+  interviewRoundId String   @map("interview_round_id")
+  skillId          String   @map("skill_id")
+  score            Int
+  notes            String?  @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  interviewRound InterviewRound @relation(fields: [interviewRoundId], references: [id], onDelete: Cascade)
+  skill          Skill          @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@unique([interviewRoundId, skillId])
+  @@index([interviewRoundId])
+  @@map("skill_evaluations")
+}

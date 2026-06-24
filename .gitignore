@@ -19,6 +19,8 @@
 
 # production
 /build
+/apps/api/dist
+/packages/*/dist
 
 # misc
 .DS_Store
