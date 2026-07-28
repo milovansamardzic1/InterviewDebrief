@@ -19,8 +19,9 @@ intent.
 | Questions            | ✅     | Full CRUD, backend + frontend (`question-form-sheet.tsx`, `delete-question-button.tsx`)                               |
 | Skill Evaluations    | ✅     | Full CRUD, backend + frontend (`skill-evaluation-form-sheet.tsx`, `delete-skill-evaluation-button.tsx`)               |
 | Reference data       | ✅     | Application sources, interview types, skills — read endpoints + client methods                                        |
-| Dashboard (backend)  | ✅     | `get-dashboard-stats` use case; includes weak skills, topic counts, status breakdown, monthly progress (round counts) |
-| Dashboard (frontend) | ✅     | `StatsOverview` renders counts, weakest areas, and questions by topic                                                 |
+| Dashboard (backend)  | ✅     | `get-dashboard-stats` use case; includes weak skills, topic counts, status breakdown, monthly progress (rounds + avg skill score) |
+| Dashboard (frontend) | ✅     | `StatsOverview` renders counts, weakest areas, questions by topic, and progress over time                                         |
+| Question history     | ✅     | `/questions` page — cross-application list, filterable by topic, links back to the source round                                   |
 
 ## Priority P0 — Core MVP loop completion ✅ Done
 
@@ -50,19 +51,39 @@ Implementation notes for future reference:
 - Manual browser QA of the full create/edit/delete flow is still pending
   (see Priority P2 for the automated-testing gap this currently relies on).
 
-## Priority P1 — Core analytics value
+## Priority P1 — Core analytics value ✅ Done
 
 **Why second:** per `docs/vision.md`, the success metric is identifying weak
 areas and tracking progress over time. This only becomes meaningful once P0
 produces real data to analyze.
 
-- [ ] ⛔ **Weakest areas view** — aggregate `SkillEvaluation.score` by skill
-      across all of a user's interviews; surface it on the dashboard.
-- [ ] ⛔ **Progress over time** — track completed-round counts (and ideally
-      average skill score) per month, rendered as a chart/visualization on
-      the dashboard.
-- [ ] ⛔ **Question history/search** — a page listing every question across
-      all applications, filterable, linking back to its round.
+- [x] ✅ **Weakest areas view** — aggregate `SkillEvaluation.score` by skill
+      across all of a user's interviews; surfaced on the dashboard
+      ("Najslabije oblasti" in `stats-overview.tsx`). This was already
+      implemented before this pass — the original audit marking it missing
+      was inaccurate.
+- [x] ✅ **Progress over time** — `progressOverTime` now tracks both
+      completed-round counts and average skill score per month
+      (`prisma-dashboard.repository.ts`), rendered as a bar visualization in
+      `progress-over-time.tsx`.
+- [x] ✅ **Question history/search** — new `/questions` page
+      (`src/features/questions/`) lists every question across all
+      applications, filterable by topic via a URL-driven server-rendered
+      form, each item linking back to its round on the application detail
+      page.
+
+Implementation notes for future reference:
+
+- `questionsByTopic` (aggregate counts) already existed and is distinct from
+  the new question history list (individual browsable/filterable questions)
+  added in this pass.
+- Backend: extended `QuestionsRepository` port with `listHistoryForUser`
+  (cursor-paginated, same pattern as `PrismaJobApplicationsRepository`), a new
+  `ListQuestionHistoryUseCase`, and a new top-level `GET /questions` route —
+  kept separate from the application-scoped nested routes since this is a
+  cross-cutting read model, not a mutation scoped to one application.
+- No new frontend dependency was added for the progress-over-time chart — a
+  lightweight CSS bar visualization was used instead of a charting library.
 
 ## Priority P2 — Quality & hardening
 

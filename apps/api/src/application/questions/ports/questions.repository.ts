@@ -1,5 +1,7 @@
 import type { QuestionResponse } from "@interwjuer/contracts";
 
+import type { QuestionHistoryRecord } from "../read-models/question-history.record.js";
+
 export type CreateQuestionData = {
   applicationId: string;
   roundId: string;
@@ -19,6 +21,18 @@ export type UpdateQuestionData = {
   notes?: string | null;
 };
 
+export type ListQuestionHistoryOptions = {
+  userId: string;
+  limit?: number;
+  cursor?: string;
+  topic?: string;
+};
+
+export type QuestionHistoryPage = {
+  items: QuestionHistoryRecord[];
+  nextCursor: string | null;
+};
+
 export interface QuestionsRepository {
   create(data: CreateQuestionData): Promise<QuestionResponse | null>;
 
@@ -36,4 +50,8 @@ export interface QuestionsRepository {
     questionId: string,
     userId: string,
   ): Promise<boolean>;
+
+  listHistoryForUser(
+    options: ListQuestionHistoryOptions,
+  ): Promise<QuestionHistoryPage>;
 }

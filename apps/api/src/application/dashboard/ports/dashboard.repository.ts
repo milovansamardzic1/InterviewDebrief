@@ -19,6 +19,7 @@ export type StatusCountRecord = {
 export type MonthlyProgressRecord = {
   month: string;
   completedRounds: number;
+  averageSkillScore: number | null;
 };
 
 export type DashboardStatsRecord = {

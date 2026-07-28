@@ -16,6 +16,7 @@ import {
   DeleteApplicationUseCase,
   UpdateApplicationUseCase,
 } from "../application/job-applications/use-cases/mutate-application.use-cases.js";
+import { ListQuestionHistoryUseCase } from "../application/questions/use-cases/list-question-history.use-case.js";
 import {
   CreateQuestionUseCase,
   DeleteQuestionUseCase,
@@ -61,6 +62,7 @@ export type Container = {
   createQuestion: CreateQuestionUseCase;
   updateQuestion: UpdateQuestionUseCase;
   deleteQuestion: DeleteQuestionUseCase;
+  listQuestionHistory: ListQuestionHistoryUseCase;
   createSkillEvaluation: CreateSkillEvaluationUseCase;
   updateSkillEvaluation: UpdateSkillEvaluationUseCase;
   deleteSkillEvaluation: DeleteSkillEvaluationUseCase;
@@ -119,6 +121,7 @@ export function createContainer(): Container {
     createQuestion: new CreateQuestionUseCase(questionsRepository),
     updateQuestion: new UpdateQuestionUseCase(questionsRepository),
     deleteQuestion: new DeleteQuestionUseCase(questionsRepository),
+    listQuestionHistory: new ListQuestionHistoryUseCase(questionsRepository),
     createSkillEvaluation: new CreateSkillEvaluationUseCase(
       skillEvaluationsRepository,
     ),

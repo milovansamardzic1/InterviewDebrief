@@ -2,11 +2,17 @@ import type { PrismaClient } from "@prisma/client";
 
 import type {
   CreateQuestionData,
+  ListQuestionHistoryOptions,
+  QuestionHistoryPage,
   QuestionsRepository,
   UpdateQuestionData,
 } from "../../../application/questions/ports/questions.repository.js";
+import type { QuestionHistoryRecord } from "../../../application/questions/read-models/question-history.record.js";
 import type { Logger } from "../../logging/logger.js";
 import { runPrismaOperation } from "./prisma-error.js";
+
+const DEFAULT_HISTORY_LIMIT = 50;
+const MAX_HISTORY_LIMIT = 100;
 
 function toQuestionResponse(question: {
   id: string;
@@ -166,5 +172,68 @@ export class PrismaQuestionsRepository implements QuestionsRepository {
     );
 
     return true;
+  }
+
+  async listHistoryForUser(
+    options: ListQuestionHistoryOptions,
+  ): Promise<QuestionHistoryPage> {
+    const take =
+      Math.min(options.limit ?? DEFAULT_HISTORY_LIMIT, MAX_HISTORY_LIMIT) + 1;
+
+    const questions = await runPrismaOperation(
+      "question.listHistoryForUser",
+      this.logger,
+      () =>
+        this.db.question.findMany({
+          where: {
+            interviewRound: { jobApplication: { userId: options.userId } },
+            ...(options.topic ? { topic: options.topic } : {}),
+          },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take,
+          ...(options.cursor
+            ? { cursor: { id: options.cursor }, skip: 1 }
+            : {}),
+          select: {
+            id: true,
+            question: true,
+            myAnswer: true,
+            topic: true,
+            difficulty: true,
+            notes: true,
+            interviewRound: {
+              select: {
+                id: true,
+                jobApplication: {
+                  select: { id: true, company: true, position: true },
+                },
+                interviewType: { select: { name: true } },
+              },
+            },
+          },
+        }),
+    );
+
+    const hasMore = questions.length > take - 1;
+    const page = hasMore ? questions.slice(0, take - 1) : questions;
+
+    const items: QuestionHistoryRecord[] = page.map((question) => ({
+      id: question.id,
+      question: question.question,
+      myAnswer: question.myAnswer,
+      topic: question.topic,
+      difficulty: question.difficulty,
+      notes: question.notes,
+      applicationId: question.interviewRound.jobApplication.id,
+      company: question.interviewRound.jobApplication.company,
+      position: question.interviewRound.jobApplication.position,
+      roundId: question.interviewRound.id,
+      interviewTypeName: question.interviewRound.interviewType.name,
+    }));
+
+    return {
+      items,
+      nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
+    };
   }
 }

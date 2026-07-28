@@ -1,10 +1,22 @@
 import type { DashboardStats } from "@interwjuer/contracts";
 
+import { ProgressOverTime } from "@/features/dashboard/components/progress-over-time";
+
 type StatsOverviewProps = {
   stats: DashboardStats;
 };
 
-const countItems: Array<{ key: keyof Pick<DashboardStats, "jobApplications" | "interviewRounds" | "questions" | "skillEvaluations" | "skills">; label: string }> = [
+const countItems: Array<{
+  key: keyof Pick<
+    DashboardStats,
+    | "jobApplications"
+    | "interviewRounds"
+    | "questions"
+    | "skillEvaluations"
+    | "skills"
+  >;
+  label: string;
+}> = [
   { key: "jobApplications", label: "Prijave" },
   { key: "interviewRounds", label: "Intervju runde" },
   { key: "questions", label: "Pitanja" },
@@ -72,6 +84,8 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
           </ul>
         </section>
       ) : null}
+
+      <ProgressOverTime progress={stats.progressOverTime} />
     </div>
   );
 }

@@ -51,6 +51,11 @@ export type {
 export type { ApplicationListResponse } from "./application-list.js";
 
 export type {
+  QuestionHistoryItem,
+  QuestionHistoryResponse,
+} from "./question-history.js";
+
+export type {
   AuthResponse,
   AuthSessionResponse,
   AuthUser,

@@ -9,6 +9,7 @@ import {
   createPublicAuthRoutes,
 } from "../presentation/routes/auth.js";
 import { createDashboardRoutes } from "../presentation/routes/dashboard.js";
+import { createQuestionsRoutes } from "../presentation/routes/questions.js";
 import { createReferenceDataRoutes } from "../presentation/routes/reference-data.js";
 import type { AppVariables } from "../presentation/context.js";
 import { handleError } from "../presentation/lib/handle-error.js";
@@ -44,6 +45,7 @@ export function createApp(container: Container) {
   protectedApi.route("/auth", createProtectedAuthRoutes(container));
   protectedApi.route("/applications", createApplicationsRoutes(container));
   protectedApi.route("/dashboard", createDashboardRoutes(container));
+  protectedApi.route("/questions", createQuestionsRoutes(container));
   protectedApi.route("/", createReferenceDataRoutes(container));
   app.route("/", protectedApi);
 

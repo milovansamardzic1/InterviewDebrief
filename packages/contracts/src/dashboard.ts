@@ -31,4 +31,5 @@ export type StatusCount = {
 export type MonthlyProgress = {
   month: string;
   completedRounds: number;
+  averageSkillScore: number | null;
 };

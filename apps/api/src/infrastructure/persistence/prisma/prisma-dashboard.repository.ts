@@ -34,6 +34,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       topicGroups,
       skillScoreGroups,
       completedRounds,
+      completedRoundSkillScores,
     ] = await runPrismaOperation("dashboard.getStats", this.logger, () =>
       Promise.all([
         this.db.jobApplication.count({ where: applicationWhere }),
@@ -67,6 +68,20 @@ export class PrismaDashboardRepository implements DashboardRepository {
             completedAt: { not: null },
           },
           select: { completedAt: true },
+        }),
+        this.db.skillEvaluation.findMany({
+          where: {
+            ...evaluationWhere,
+            interviewRound: {
+              jobApplication: applicationWhere,
+              status: "COMPLETED",
+              completedAt: { not: null },
+            },
+          },
+          select: {
+            score: true,
+            interviewRound: { select: { completedAt: true } },
+          },
         }),
       ]),
     );
@@ -120,7 +135,22 @@ export class PrismaDashboardRepository implements DashboardRepository {
       count: group._count._all,
     }));
 
-    const progressMap = new Map<string, number>();
+    const progressMap = new Map<
+      string,
+      { completedRounds: number; totalScore: number; scoreCount: number }
+    >();
+
+    function getMonthEntry(month: string) {
+      const existing = progressMap.get(month);
+
+      if (existing) {
+        return existing;
+      }
+
+      const created = { completedRounds: 0, totalScore: 0, scoreCount: 0 };
+      progressMap.set(month, created);
+      return created;
+    }
 
     for (const round of completedRounds) {
       if (!round.completedAt) {
@@ -128,13 +158,30 @@ export class PrismaDashboardRepository implements DashboardRepository {
       }
 
       const month = round.completedAt.toISOString().slice(0, 7);
-      progressMap.set(month, (progressMap.get(month) ?? 0) + 1);
+      getMonthEntry(month).completedRounds += 1;
+    }
+
+    for (const evaluation of completedRoundSkillScores) {
+      const completedAt = evaluation.interviewRound.completedAt;
+
+      if (!completedAt) {
+        continue;
+      }
+
+      const month = completedAt.toISOString().slice(0, 7);
+      const entry = getMonthEntry(month);
+      entry.totalScore += evaluation.score;
+      entry.scoreCount += 1;
     }
 
     const progressOverTime = [...progressMap.entries()]
-      .map(([month, completedRoundsCount]) => ({
+      .map(([month, entry]) => ({
         month,
-        completedRounds: completedRoundsCount,
+        completedRounds: entry.completedRounds,
+        averageSkillScore:
+          entry.scoreCount > 0
+            ? Math.round((entry.totalScore / entry.scoreCount) * 10) / 10
+            : null,
       }))
       .sort((a, b) => a.month.localeCompare(b.month));
 

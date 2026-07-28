@@ -1,4 +1,9 @@
-import { ClipboardList, Home, type LucideIcon } from "lucide-react";
+import {
+  ClipboardList,
+  Home,
+  MessageCircleQuestion,
+  type LucideIcon,
+} from "lucide-react";
 
 export type NavItem = {
   title: string;
@@ -16,5 +21,10 @@ export const mainNavItems: NavItem[] = [
     title: "Prijave",
     href: "/applications",
     icon: ClipboardList,
+  },
+  {
+    title: "Pitanja",
+    href: "/questions",
+    icon: MessageCircleQuestion,
   },
 ];
