@@ -1,0 +1,24 @@
+---
+description: Infrastructure layer conventions (Prisma repos, mappers, auth, logging)
+globs: apps/api/src/infrastructure/**
+alwaysApply: false
+---
+
+# Infrastructure layer
+
+Implements the ports defined in `application/`. Never contains business rules
+— only translates between Prisma and the application layer.
+
+- **Repositories** (`persistence/prisma/prisma-<feature>.repository.ts`)
+  implement the matching port interface exactly; one class per aggregate.
+- **Mappers** (`persistence/prisma/mappers/*.mapper.ts`) convert Prisma models
+  to application read models — keep Prisma types out of the application layer.
+- Wrap Prisma errors via `prisma-error.ts` helpers before rethrowing, so
+  Presentation never sees raw Prisma error codes.
+- **Auth**: `jose` for JWT (`jose-auth-token.service.ts`), `bcrypt` for
+  password hashing (`bcrypt-password-hasher.ts`) — both implement application
+  ports (`auth-token.service.ts`, `password-hasher.ts`).
+- **Config** (`config/env.ts`): all `process.env` reads go through
+  `loadEnv()` — never scatter raw `process.env` access across the codebase.
+- **Logging**: use the injected logger (`logging/logger.ts`), not
+  `console.log`, so output stays structured for stdout/stderr aggregation.

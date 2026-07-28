@@ -1,0 +1,24 @@
+---
+description: Application layer conventions (use cases, ports, read models)
+globs: apps/api/src/application/**
+alwaysApply: false
+---
+
+# Application layer
+
+Contains all business logic. Organized per feature:
+`application/<feature>/{use-cases,ports,read-models}/`.
+
+- **Use cases** are classes named `<Verb><Entity>UseCase` (e.g.
+  `CreateApplicationUseCase`) with a single `execute(input)` method. One class
+  per operation — see `mutate-application.use-cases.ts` for the pattern of
+  co-locating Create/Update/Delete use cases for one entity.
+- **Ports** are interfaces only (e.g. `job-applications.repository.ts`) —
+  no implementation, no Prisma types.
+- **Read models** (`read-models/*.record.ts`) describe the shape returned to
+  Presentation — plain types, not Prisma types.
+- Must never import `@prisma/client`, `hono`, or any concrete repository class.
+- Errors: throw typed errors from `application/shared/errors/app-error.ts`
+  (e.g. `NotFoundError`), never raw `Error`. Use `assert-resource.ts` helpers
+  for ownership/existence checks.
+- Validate ownership (`userId`) inside the use case, not just in the route.

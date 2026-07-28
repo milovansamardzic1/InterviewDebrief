@@ -1,0 +1,23 @@
+---
+description: Authentication and security conventions
+globs: apps/api/src/**/auth/**,apps/api/src/presentation/middleware/auth.ts,src/lib/auth/**,src/app/api/auth/**,src/app/login/**
+alwaysApply: false
+---
+
+# Authentication & security
+
+- Access tokens are JWTs signed via `jose` (`jose-auth-token.service.ts`),
+  passwords hashed via `bcrypt` (`bcrypt-password-hasher.ts`) — both are
+  Infrastructure adapters behind Application ports; never call `jose`/`bcrypt`
+  directly from Presentation or Frontend.
+- Tokens travel as an httpOnly `access_token` cookie set by the Next.js route
+  handlers (`src/app/api/auth/*`), which proxy to the API. **Never** store
+  tokens in `localStorage` or expose them to client-side JS.
+- API accepts the token via `Authorization: Bearer <token>` OR the cookie —
+  see `presentation/lib/extract-access-token.ts`.
+- All protected routes go through `createAuthMiddleware` (sets
+  `c.get("userId")`) — never re-implement token parsing in a route handler.
+- Every use case that touches user-owned data must scope queries by `userId`
+  server-side; never trust a client-supplied `userId`.
+- Rate-limit auth endpoints (`presentation/middleware/rate-limiter.ts`) —
+  extend it, don't bypass it, when adding new public auth endpoints.

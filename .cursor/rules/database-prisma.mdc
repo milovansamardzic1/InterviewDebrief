@@ -1,0 +1,27 @@
+---
+description: Prisma schema and repository conventions for this project
+globs: prisma/**,apps/api/src/infrastructure/persistence/**
+alwaysApply: false
+---
+
+# Database & Prisma
+
+Prisma exists ONLY inside `apps/api/src/infrastructure/`. Repositories under
+`persistence/prisma/` are the only database access layer — never bypass them
+with ad hoc queries elsewhere.
+
+- IDs: `@id @default(cuid())` (matches existing models — stay consistent,
+  don't switch to `autoincrement()`).
+- Every model has `createdAt @default(now())` and `updatedAt @updatedAt`.
+- Use `@@map`/`@map` to snake_case DB names while keeping camelCase in Prisma
+  Client (see existing models for the pattern).
+- Add `@@index` for foreign keys and frequently filtered columns (e.g.
+  `userId`, `applicationStatus`).
+- Relations: always define both sides with explicit `@relation`, and choose
+  `onDelete: Cascade` vs `Restrict` deliberately (Cascade for owned
+  child records like rounds/questions, Restrict for shared reference data like
+  `ApplicationSource`/`InterviewType`/`Skill`).
+- After editing `schema.prisma`: run `pnpm db:migrate` with a descriptive
+  migration name — never hand-edit an already-applied migration file.
+- Never run migrations from request handlers or app startup — they are a
+  release-time admin process (`prisma migrate deploy`).

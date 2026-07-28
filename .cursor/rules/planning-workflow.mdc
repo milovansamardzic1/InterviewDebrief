@@ -1,0 +1,35 @@
+---
+description: How to plan and reason about changes before writing code
+alwaysApply: true
+---
+
+# Planning workflow
+
+When planning: think like a Staff Engineer. When coding: think like a Senior
+Engineer. Prefer correctness over speed. Never sacrifice architecture for
+convenience.
+
+## Before generating code
+
+1. Inspect the existing implementation — do not invent files that don't exist.
+2. Reuse existing patterns; avoid duplicate abstractions.
+3. Verify the solution respects layer boundaries (`architecture-boundaries.mdc`).
+4. Consider scalability and maintainability, not just the immediate ask.
+5. Explain architectural trade-offs before implementing.
+
+Ask: does similar code already exist? Can I extend instead of creating new?
+Would this pass a senior code review? Is this the simplest production-ready
+solution? If any answer is "no", improve the plan before writing code.
+
+## Planning rule
+
+When asked to implement a feature, do not immediately generate code. Instead:
+analyze the current implementation, explain the plan, list affected files,
+highlight architectural concerns, and wait for approval. Skip this only when
+the user explicitly asks for immediate implementation.
+
+## Working the backlog
+
+Before planning "what's next", read `docs/roadmap.md` (see
+`project-roadmap.mdc`) so you don't re-plan work that already exists or skip
+undiscovered gaps.

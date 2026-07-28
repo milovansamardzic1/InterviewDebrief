@@ -1,0 +1,21 @@
+---
+description: Shared DTO contract package rules
+globs: packages/contracts/**
+alwaysApply: false
+---
+
+# Contracts package
+
+`packages/contracts` is the single source of truth for API shapes shared by
+`apps/api` and `src/`. Both sides import from `@interwjuer/contracts` — never
+duplicate or redefine these types locally in either app.
+
+- Plain TypeScript types/enums only — no Prisma types, no framework types
+  (no Hono `Context`, no React types).
+- One file per domain concept (e.g. `job-applications.ts`,
+  `job-application-mutations.ts`, `enums.ts`), re-exported from `index.ts`.
+- Request/response DTOs are separate from Prisma models — only include fields
+  the API actually returns or accepts, not the raw table shape.
+- Changing a contract is step 1 of any cross-layer feature (see
+  `architecture-boundaries.mdc` feature order) — update it before touching
+  Application/Infrastructure/Presentation/Frontend.

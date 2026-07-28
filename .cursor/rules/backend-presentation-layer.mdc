@@ -1,0 +1,25 @@
+---
+description: Presentation layer conventions (Hono routes, Zod schemas, middleware)
+globs: apps/api/src/presentation/**
+alwaysApply: false
+---
+
+# Presentation layer
+
+Responsible only for HTTP: routing, validation, request parsing, response
+mapping. Never implement business logic or import Prisma here.
+
+- Routes (`routes/<feature>.ts`) export a `create<Feature>Routes(deps)`
+  factory that receives use cases via a typed `<Feature>RouteDeps` object
+  (see `applications.ts`) — never import concrete use case classes directly,
+  only their types, so composition stays the wiring edge.
+- Validate every input with `zValidator("json"/"param"/"query", Schema)` from
+  `presentation/schemas/<feature>.schema.ts` (Zod). Never trust unvalidated
+  `c.req`.
+- Read the authenticated user via `c.get("userId")` (set by
+  `middleware/auth.ts`), never trust a client-supplied user id in the body.
+- Translate not-found/ownership failures by throwing the typed application
+  errors — let the shared `handle-error.ts` `onError` handler map them to HTTP
+  status codes. Don't `try/catch` and format errors ad hoc inside routes.
+- New nested resource routes follow the existing REST nesting pattern:
+  `/:applicationId/rounds/:roundId/questions/:questionId`.

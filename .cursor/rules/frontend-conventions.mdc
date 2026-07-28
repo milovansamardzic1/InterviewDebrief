@@ -1,0 +1,30 @@
+---
+description: Next.js frontend conventions (Server Components, feature folders, API clients)
+globs: src/**
+alwaysApply: false
+---
+
+# Frontend conventions
+
+Frontend must NEVER access Prisma/PostgreSQL directly or contain business
+logic — that belongs in API use cases. The frontend only renders UI, calls
+the API, and manages layout.
+
+- **State preference order**: Server Components → Server Actions → Client
+  Components. Avoid `"use client"` unless you need interactivity, hooks, or
+  browser APIs.
+- **Feature folders** (`src/features/<name>/`): `components/` for feature UI,
+  `actions/` for Server Actions that proxy to the API, `lib/` for
+  feature-local helpers/schemas.
+- **API access**: always go through `src/lib/api/<feature>.ts` typed clients
+  (built on `src/lib/api/client.ts`). Never call `fetch` directly in a page or
+  component — Server Actions call the API client (see
+  `application-mutations.ts`), because only the server can read the httpOnly
+  `access_token` cookie.
+- DTO types come from `@interwjuer/contracts` — never redeclare them locally.
+- Forms use React Hook Form + Zod, validated against the same shape as the
+  contracts DTO (see `application-form-schema.ts`).
+- Styling: Tailwind + shadcn/ui + `clsx`/`tailwind-merge` only. Keep pages
+  thin; move logic/markup into `src/features/*/components/`.
+- Every data view must handle loading, empty, and error states explicitly —
+  never leave a bare unhandled promise or missing empty-state message.

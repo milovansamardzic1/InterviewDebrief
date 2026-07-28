@@ -1,0 +1,43 @@
+---
+description: Hexagonal architecture layer boundaries, dependency rules, and naming conventions
+alwaysApply: true
+---
+
+# Architecture boundaries
+
+Backend (`apps/api/src/`) follows Ports & Adapters (Hexagonal Architecture).
+Dependency flow: `Presentation → Application → Ports → Infrastructure`,
+wired by `composition/`.
+
+| Layer          | Location                        | May import                     | Must NEVER import           |
+| -------------- | -------------------------------- | ------------------------------- | ---------------------------- |
+| Presentation   | `presentation/`                  | Use cases, schemas, contracts   | Prisma, concrete repos       |
+| Application    | `application/<feature>/`         | Ports, read models, contracts   | Prisma, Hono, concrete repos |
+| Infrastructure | `infrastructure/`                 | Prisma, ports, read models      | Hono, routes                 |
+| Composition    | `composition/`                    | Everything (wiring edge only)   | —                             |
+
+- `@prisma/client` only inside `infrastructure/`.
+- Concrete repository classes only imported in `composition/container.ts`.
+- `packages/contracts` is the single source of truth for DTOs — never duplicate
+  or redefine API types elsewhere.
+- No business logic in route handlers or `page.tsx`.
+- No singleton repository defaults — wire dependencies in `composition/container.ts`.
+
+## Naming
+
+Use descriptive, unabbreviated names: `CreateApplicationUseCase`,
+`ListApplicationsUseCase`, `JobApplicationsRepository`. Avoid abbreviations.
+
+## Feature implementation order
+
+When a feature spans layers, implement in this order and never skip a layer:
+
+1. `packages/contracts` (DTOs)
+2. Application (ports + use cases)
+3. Infrastructure (Prisma repo + mapper)
+4. Composition (register in `container.ts`)
+5. Presentation (route + Zod schema)
+6. Frontend (`src/lib/api/*` client → feature UI)
+7. Tests
+
+See `docs/architecture.md` for the full layer diagram.

@@ -1,0 +1,18 @@
+---
+description: Points Plan Mode at the living project backlog before planning new work
+alwaysApply: true
+---
+
+# Project roadmap
+
+`docs/roadmap.md` is the single source of truth for what is already built vs.
+what remains, grouped by priority (P0–P3).
+
+- Before proposing a plan for "what to build next" or "finish the project",
+  read `docs/roadmap.md` first. Don't re-propose items already marked ✅ done.
+- Prefer the next unfinished item in priority order (P0 before P1, etc.)
+  unless the user explicitly asks to jump ahead.
+- When a roadmap item is completed, update its status in `docs/roadmap.md` in
+  the same change — the roadmap must stay accurate, not aspirational.
+- If you discover a gap not listed in the roadmap, add it before starting
+  unrelated work, so the backlog stays a reliable audit of reality.

@@ -29,36 +29,37 @@ Next.js web app  →  Node API (apps/api)  →  Prisma Client  →  PostgreSQL
 | `Skill`             | Skill catalog for self-evaluation                       |
 | `SkillEvaluation`   | Score for a skill in a specific round                   |
 
-## Local setup (Windows)
+## Local setup (Docker, Windows)
 
-### 1. PostgreSQL status
+PostgreSQL runs as a container via `docker-compose.yml` at the repo root — no
+native PostgreSQL install needed. Requires Docker Desktop (with the WSL2
+backend) to be installed and running.
 
-PostgreSQL **18** is installed and the service `postgresql-x64-18` is running.
-
-`psql` is not in your PATH. Use the full path:
+### 1. Start PostgreSQL
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres
+docker compose up -d
 ```
 
-### 2. Create the database
+This starts a `postgres:16-alpine` container named `interwjuer-postgres`,
+exposed on `localhost:5432`, with data persisted in the `interwjuer_postgres_data`
+Docker volume (survives container restarts/recreation; removed only via
+`docker compose down -v`).
 
-In `psql`:
+### 2. Configure `.env`
 
-```sql
-CREATE DATABASE interwjuer;
-\q
-```
-
-### 3. Configure `.env`
-
-Update `.env` with your real postgres password (set during PostgreSQL installation):
+A root-level `.env` (gitignored, see `.env.example`) already points at the
+compose service:
 
 ```env
-DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/interwjuer?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/interwjuer?schema=public"
 ```
 
-### 4. Apply schema and seed
+`apps/api` loads this same root `.env` at startup via `process.loadEnvFile()`
+(see `apps/api/src/index.ts`) — there is only one `.env` file for the whole
+monorepo, shared by the Next.js app and the API.
+
+### 3. Apply schema and seed
 
 ```powershell
 pnpm db:migrate
@@ -67,13 +68,19 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-### 5. Browse data (optional)
+### 4. Browse data (optional)
 
 ```powershell
 pnpm exec prisma studio
 ```
 
 Opens a web UI at `http://localhost:5555`.
+
+### Alternative: native PostgreSQL install
+
+If you'd rather not use Docker, install PostgreSQL directly (e.g. via
+`choco install postgresql` or the installer from postgresql.org), create a
+`interwjuer` database, and point `DATABASE_URL` in `.env` at it instead.
 
 ## Useful commands
 

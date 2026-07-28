@@ -1,0 +1,33 @@
+---
+description: Project identity, vision, tech stack, and monorepo boundaries
+alwaysApply: true
+---
+
+# Interwjuer
+
+Production-quality Job Application Tracker SaaS. NOT a tutorial or MVP throwaway —
+favor long-term maintainability over less code. Portfolio-quality, testable, scalable.
+
+## Problem it solves
+
+Software engineers rarely track interview questions, weak areas, and rejection
+reasons, so they repeat the same mistakes. Interwjuer turns interview experience
+into concrete insights and a learning plan. See `docs/vision.md` for full context.
+
+## Tech stack
+
+- **Frontend**: Next.js App Router, React, TypeScript, Tailwind, shadcn/ui
+- **Backend**: Hono, TypeScript, Prisma, PostgreSQL
+- **Infra**: pnpm workspace, Docker (Postgres locally)
+
+## Monorepo boundaries
+
+| Path                   | Purpose             |
+| ----------------------- | -------------------- |
+| `src/`                  | Next.js frontend     |
+| `apps/api/`             | REST API (Hono)      |
+| `packages/contracts/`   | Shared DTOs          |
+| `prisma/`               | Schema, migrations, seed |
+
+Web and API communicate **only over HTTP**. Never import backend code into the
+frontend, and never import `@prisma/client` outside `apps/api/src/infrastructure/`.
