@@ -31,5 +31,10 @@ the user explicitly asks for immediate implementation.
 ## Working the backlog
 
 Before planning "what's next", read `docs/roadmap.md` (see
-`project-roadmap.mdc`) so you don't re-plan work that already exists or skip
-undiscovered gaps.
+`project-roadmap.mdc`) so you don't re-plan work that already exists.
+
+MVP (P0–P3 first slices) is complete on `master`. You may plan new product
+features immediately. Leftover polish (deploy, Sentry, deferred E2E /
+integration tests) is optional unless the user prioritizes it. When the user
+asks for a new feature not on the roadmap, add it to `docs/roadmap.md` as
+part of the plan (Why + scope), then implement after approval.

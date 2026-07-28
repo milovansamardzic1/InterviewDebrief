@@ -5,26 +5,31 @@ alwaysApply: true
 
 # Quality gates
 
-No test framework or CI pipeline exists yet (see `docs/roadmap.md` Priority
-P2). Until they land, still design code to be testable (pure use cases,
-injectable ports). Once they land, follow these rules:
+Vitest and GitHub Actions CI already exist (see `docs/roadmap.md` Priority
+P2). Design code to be testable (pure use cases, injectable ports) and follow:
 
 ## Testing
 
 - **Unit tests**: application use cases (`apps/api/src/application/**`), pure
-  functions, and mappers — Vitest, no real database.
-- **Integration tests**: Prisma repositories against a real test database.
-- **E2E smoke tests**: critical user flows only (login, create application,
-  add round → question → skill evaluation) — Playwright.
-- New use case or repository ⇒ add/update its unit test in the same PR.
+  functions, and mappers — Vitest, no real database. Prefer small in-memory
+  fakes implementing repository ports (project convention; no mocking
+  framework required).
+- **Integration tests**: Prisma repositories against a real test database —
+  still deferred; do not invent a full test-DB harness unless that is the
+  scoped task.
+- **E2E smoke tests**: critical user flows (login, create application, add
+  round → question → skill evaluation) — Playwright still deferred unless
+  scoped.
+- New use case ⇒ add/update its unit test in the same change when practical.
 - Do not test framework internals (Hono routing, Prisma itself).
 
 ## CI/CD
 
-- Every PR must run: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` (once
-  it exists), `pnpm build` — all must pass before merge.
+- CI runs on push/PR to `main`: `pnpm lint`, `pnpm format:check`,
+  `pnpm typecheck`, `pnpm test`, `pnpm build` (see `.github/workflows/ci.yml`).
 - Migrations run as a release step (`prisma migrate deploy`), never inside
   request handlers or app startup code.
 - Each environment (dev/staging/prod) gets its own `DATABASE_URL` and secrets
   via platform env config, not via separate code branches.
-- Lockfile (`pnpm-lock.yaml`) stays committed; CI installs with `--frozen-lockfile`.
+- Lockfile (`pnpm-lock.yaml`) stays committed; CI installs with
+  `--frozen-lockfile`.

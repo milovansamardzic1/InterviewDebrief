@@ -14,6 +14,14 @@ Software engineers rarely track interview questions, weak areas, and rejection
 reasons, so they repeat the same mistakes. Interwjuer turns interview experience
 into concrete insights and a learning plan. See `docs/vision.md` for full context.
 
+## Product phase
+
+MVP loop is live on `master`: auth, applications (+ filters), rounds, questions,
+skill evaluations, dashboard analytics, question history, Vitest + CI. Next
+product focus is the learning loop (P4 in `docs/roadmap.md`) — turning weak
+skills into a concrete study plan. New features are welcome without clearing
+every leftover polish item first.
+
 ## Tech stack
 
 - **Frontend**: Next.js App Router, React, TypeScript, Tailwind, shadcn/ui
