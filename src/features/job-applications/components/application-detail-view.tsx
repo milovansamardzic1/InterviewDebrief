@@ -1,19 +1,30 @@
 import { ArrowLeft, ExternalLink, Wallet } from "lucide-react";
 import Link from "next/link";
 
+import { ApplicationFormSheet } from "@/features/job-applications/components/application-form-sheet";
 import { ApplicationQuestionsByRound } from "@/features/job-applications/components/application-questions-by-round";
 import { ApplicationStatusBadge } from "@/features/job-applications/components/application-status-badge";
+import { DeleteApplicationButton } from "@/features/job-applications/components/delete-application-button";
 import { InterviewRoundDetail } from "@/features/job-applications/components/interview-round-detail";
 import { InterviewRoundProgress } from "@/features/job-applications/components/interview-round-progress";
+import { RoundFormSheet } from "@/features/job-applications/components/round-form-sheet";
 import {
   formatApplicationDate,
   formatSalaryRange,
 } from "@/features/job-applications/lib/format";
-import type { ApplicationDetail } from "@interwjuer/contracts";
-import type { ApplicationListRound } from "@interwjuer/contracts";
+import type {
+  ApplicationDetail,
+  ApplicationListRound,
+  ApplicationSourceItem,
+  InterviewTypeItem,
+  SkillItem,
+} from "@interwjuer/contracts";
 
 type ApplicationDetailViewProps = {
   application: ApplicationDetail;
+  applicationSources: ApplicationSourceItem[];
+  interviewTypes: InterviewTypeItem[];
+  skills: SkillItem[];
 };
 
 function toProgressRounds(
@@ -31,6 +42,9 @@ function toProgressRounds(
 
 export function ApplicationDetailView({
   application,
+  applicationSources,
+  interviewTypes,
+  skills,
 }: ApplicationDetailViewProps) {
   const salary = formatSalaryRange(
     application.salaryMin,
@@ -63,7 +77,18 @@ export function ApplicationDetailView({
               {application.position}
             </p>
           </div>
-          <ApplicationStatusBadge status={application.applicationStatus} />
+          <div className="flex items-center gap-2">
+            <ApplicationStatusBadge status={application.applicationStatus} />
+            <ApplicationFormSheet
+              mode="edit"
+              application={application}
+              applicationSources={applicationSources}
+            />
+            <DeleteApplicationButton
+              applicationId={application.id}
+              company={application.company}
+            />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -118,9 +143,17 @@ export function ApplicationDetailView({
       ) : null}
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="mb-4 text-sm font-medium text-foreground">
-          Intervju proces
-        </h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-medium text-foreground">
+            Intervju proces
+          </h2>
+          <RoundFormSheet
+            mode="create"
+            applicationId={application.id}
+            existingRoundCount={application.rounds.length}
+            interviewTypes={interviewTypes}
+          />
+        </div>
         <InterviewRoundProgress rounds={toProgressRounds(application.rounds)} />
 
         {application.rounds.length > 0 ? (
@@ -144,7 +177,10 @@ export function ApplicationDetailView({
         ) : null}
       </section>
 
-      <ApplicationQuestionsByRound rounds={application.rounds} />
+      <ApplicationQuestionsByRound
+        applicationId={application.id}
+        rounds={application.rounds}
+      />
 
       <section className="space-y-4">
         <div>
@@ -165,7 +201,13 @@ export function ApplicationDetailView({
         ) : (
           <div className="grid gap-4">
             {application.rounds.map((round) => (
-              <InterviewRoundDetail key={round.id} round={round} />
+              <InterviewRoundDetail
+                key={round.id}
+                applicationId={application.id}
+                round={round}
+                interviewTypes={interviewTypes}
+                skills={skills}
+              />
             ))}
           </div>
         )}

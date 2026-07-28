@@ -3,6 +3,7 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -25,6 +26,7 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning>
         <TooltipProvider>{children}</TooltipProvider>
+        <Toaster />
       </body>
     </html>
   );

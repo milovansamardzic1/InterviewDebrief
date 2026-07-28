@@ -9,26 +9,42 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { DeleteRoundButton } from "@/features/job-applications/components/delete-round-button";
+import { DeleteSkillEvaluationButton } from "@/features/job-applications/components/delete-skill-evaluation-button";
+import { RoundFormSheet } from "@/features/job-applications/components/round-form-sheet";
 import { RoundStatusBadge } from "@/features/job-applications/components/round-status-badge";
+import { SkillEvaluationFormSheet } from "@/features/job-applications/components/skill-evaluation-form-sheet";
 import { formatDateTime } from "@/features/job-applications/lib/format";
-import type { ApplicationDetailRound } from "@interwjuer/contracts";
+import type {
+  ApplicationDetailRound,
+  InterviewTypeItem,
+  SkillItem,
+} from "@interwjuer/contracts";
 
 type InterviewRoundDetailProps = {
+  applicationId: string;
   round: ApplicationDetailRound;
+  interviewTypes: InterviewTypeItem[];
+  skills: SkillItem[];
 };
 
 function DetailSection({
   title,
   emptyMessage,
+  action,
   children,
 }: {
   title: string;
   emptyMessage: string;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section className="space-y-3">
-      <h4 className="text-sm font-medium text-foreground">{title}</h4>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="text-sm font-medium text-foreground">{title}</h4>
+        {action}
+      </div>
       {children ?? (
         <p className="text-sm text-muted-foreground">{emptyMessage}</p>
       )}
@@ -36,7 +52,13 @@ function DetailSection({
   );
 }
 
-export function InterviewRoundDetail({ round }: InterviewRoundDetailProps) {
+export function InterviewRoundDetail({
+  applicationId,
+  round,
+  interviewTypes,
+  skills,
+}: InterviewRoundDetailProps) {
+  const roundLabel = `Rundu ${round.sortOrder} · ${round.interviewTypeName}`;
   const scheduleItems = [
     round.scheduledAt
       ? { label: "Zakazano", value: formatDateTime(round.scheduledAt) }
@@ -60,7 +82,20 @@ export function InterviewRoundDetail({ round }: InterviewRoundDetailProps) {
               </CardDescription>
             ) : null}
           </div>
-          <RoundStatusBadge status={round.status} />
+          <div className="flex flex-wrap items-center gap-2">
+            <RoundStatusBadge status={round.status} />
+            <RoundFormSheet
+              mode="edit"
+              applicationId={applicationId}
+              round={round}
+              interviewTypes={interviewTypes}
+            />
+            <DeleteRoundButton
+              applicationId={applicationId}
+              roundId={round.id}
+              roundLabel={roundLabel}
+            />
+          </div>
         </div>
 
         {scheduleItems.length > 0 ? (
@@ -108,6 +143,14 @@ export function InterviewRoundDetail({ round }: InterviewRoundDetailProps) {
         <DetailSection
           title={`Skill evaluacije (${round.skillEvaluations.length})`}
           emptyMessage="Nema skill evaluacija za ovu rundu."
+          action={
+            <SkillEvaluationFormSheet
+              mode="create"
+              applicationId={applicationId}
+              roundId={round.id}
+              skills={skills}
+            />
+          }
         >
           {round.skillEvaluations.length > 0 ? (
             <ul className="grid gap-3 sm:grid-cols-2">
@@ -137,6 +180,20 @@ export function InterviewRoundDetail({ round }: InterviewRoundDetailProps) {
                       {evaluation.notes}
                     </p>
                   ) : null}
+                  <div className="mt-3 flex items-center justify-end gap-1">
+                    <SkillEvaluationFormSheet
+                      mode="edit"
+                      applicationId={applicationId}
+                      roundId={round.id}
+                      evaluation={evaluation}
+                      skills={skills}
+                    />
+                    <DeleteSkillEvaluationButton
+                      applicationId={applicationId}
+                      roundId={round.id}
+                      evaluationId={evaluation.id}
+                    />
+                  </div>
                 </li>
               ))}
             </ul>

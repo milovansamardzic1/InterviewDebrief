@@ -4,10 +4,12 @@ import { RoundQuestionsList } from "@/features/job-applications/components/round
 import type { ApplicationDetailRound } from "@interwjuer/contracts";
 
 type ApplicationQuestionsByRoundProps = {
+  applicationId: string;
   rounds: ApplicationDetailRound[];
 };
 
 export function ApplicationQuestionsByRound({
+  applicationId,
   rounds,
 }: ApplicationQuestionsByRoundProps) {
   const totalQuestions = rounds.reduce(
@@ -50,7 +52,11 @@ export function ApplicationQuestionsByRound({
       ) : (
         <div className="grid gap-4">
           {rounds.map((round) => (
-            <RoundQuestionsList key={round.id} round={round} />
+            <RoundQuestionsList
+              key={round.id}
+              applicationId={applicationId}
+              round={round}
+            />
           ))}
         </div>
       )}

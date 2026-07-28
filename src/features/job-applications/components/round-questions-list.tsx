@@ -2,14 +2,20 @@ import { HelpCircle } from "lucide-react";
 
 import { RoundStatusBadge } from "@/features/job-applications/components/round-status-badge";
 import { QuestionCard } from "@/features/job-applications/components/question-card";
+import { QuestionFormSheet } from "@/features/job-applications/components/question-form-sheet";
+import { DeleteQuestionButton } from "@/features/job-applications/components/delete-question-button";
 import { formatDateTime } from "@/features/job-applications/lib/format";
 import type { ApplicationDetailRound } from "@interwjuer/contracts";
 
 type RoundQuestionsListProps = {
+  applicationId: string;
   round: ApplicationDetailRound;
 };
 
-export function RoundQuestionsList({ round }: RoundQuestionsListProps) {
+export function RoundQuestionsList({
+  applicationId,
+  round,
+}: RoundQuestionsListProps) {
   const roundLabel = `Runda ${round.sortOrder} · ${round.interviewTypeName}`;
 
   return (
@@ -28,7 +34,14 @@ export function RoundQuestionsList({ round }: RoundQuestionsListProps) {
             </p>
           ) : null}
         </div>
-        <RoundStatusBadge status={round.status} />
+        <div className="flex items-center gap-2">
+          <RoundStatusBadge status={round.status} />
+          <QuestionFormSheet
+            mode="create"
+            applicationId={applicationId}
+            roundId={round.id}
+          />
+        </div>
       </header>
 
       <div className="p-5">
@@ -47,8 +60,21 @@ export function RoundQuestionsList({ round }: RoundQuestionsListProps) {
         ) : (
           <ol className="grid gap-3">
             {round.questions.map((question, index) => (
-              <li key={question.id}>
+              <li key={question.id} className="space-y-2">
                 <QuestionCard index={index + 1} question={question} />
+                <div className="flex items-center justify-end gap-1">
+                  <QuestionFormSheet
+                    mode="edit"
+                    applicationId={applicationId}
+                    roundId={round.id}
+                    question={question}
+                  />
+                  <DeleteQuestionButton
+                    applicationId={applicationId}
+                    roundId={round.id}
+                    questionId={question.id}
+                  />
+                </div>
               </li>
             ))}
           </ol>

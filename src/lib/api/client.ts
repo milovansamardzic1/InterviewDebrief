@@ -1,4 +1,7 @@
 import { getAuthHeaders } from "@/lib/auth/session";
+import { ApiError } from "@/lib/api/errors";
+
+export { ApiError, isNotFound } from "@/lib/api/errors";
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
 
@@ -20,16 +23,6 @@ function getApiUrl() {
   }
 
   return "http://localhost:4000";
-}
-
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -97,7 +90,3 @@ export const api = {
     return request<void>(path, { method: "DELETE" });
   },
 };
-
-export function isNotFound(error: unknown) {
-  return error instanceof ApiError && error.status === 404;
-}

@@ -15,28 +15,40 @@ intent.
 | -------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
 | Auth                 | ✅     | Register/login/logout/me, JWT (`jose`) + bcrypt, httpOnly cookie, login+register combined UI at `/login`              |
 | Job Applications     | ✅     | Full CRUD, backend + frontend (list, detail, form sheet, delete, status badge)                                        |
-| Interview Rounds     | 🟡     | Full CRUD backend; frontend only displays existing rounds, no create/edit/delete UI yet                               |
-| Questions            | 🟡     | Full CRUD backend; frontend only displays existing questions, no create/edit/delete UI yet                            |
-| Skill Evaluations    | 🟡     | Full CRUD backend; frontend only displays existing evaluations, no create/edit/delete UI yet                          |
-| Reference data       | ✅     | Application sources — read endpoint + client method                                                                   |
+| Interview Rounds     | ✅     | Full CRUD, backend + frontend (`round-form-sheet.tsx`, `delete-round-button.tsx`)                                     |
+| Questions            | ✅     | Full CRUD, backend + frontend (`question-form-sheet.tsx`, `delete-question-button.tsx`)                               |
+| Skill Evaluations    | ✅     | Full CRUD, backend + frontend (`skill-evaluation-form-sheet.tsx`, `delete-skill-evaluation-button.tsx`)               |
+| Reference data       | ✅     | Application sources, interview types, skills — read endpoints + client methods                                        |
 | Dashboard (backend)  | ✅     | `get-dashboard-stats` use case; includes weak skills, topic counts, status breakdown, monthly progress (round counts) |
 | Dashboard (frontend) | ✅     | `StatsOverview` renders counts, weakest areas, and questions by topic                                                 |
 
-## Priority P0 — Core MVP loop completion
+## Priority P0 — Core MVP loop completion ✅ Done
 
-**Why first:** the backend fully supports rounds/questions/skill-evaluations,
-but the frontend only _displays_ them. There is no way for a user to create
+**Why first:** the backend fully supported rounds/questions/skill-evaluations,
+but the frontend only _displayed_ them. There was no way for a user to create
 an interview round, log a question, or self-evaluate a skill from the UI —
-the product's core value proposition (`docs/vision.md`) is not usable end to
-end. This blocks everything else, including meaningful analytics and tests.
+the product's core value proposition (`docs/vision.md`) was not usable end to
+end. This blocked everything else, including meaningful analytics and tests.
 
-- [ ] ⛔ **Interview round CRUD UI** — add/edit/delete a round from the
+- [x] ✅ **Interview round CRUD UI** — add/edit/delete a round from the
       application detail page (interview type picker, schedule, status,
-      notes).
-- [ ] ⛔ **Question CRUD UI** — add/edit/delete a question within a round
+      notes). `round-form-sheet.tsx` + `actions/round-mutations.ts`.
+- [x] ✅ **Question CRUD UI** — add/edit/delete a question within a round
       (question text, my answer, topic, difficulty, notes).
-- [ ] ⛔ **Skill evaluation CRUD UI** — add/edit/delete a skill evaluation
+      `question-form-sheet.tsx` + `actions/question-mutations.ts`.
+- [x] ✅ **Skill evaluation CRUD UI** — add/edit/delete a skill evaluation
       within a round (skill picker from reference data, score, notes).
+      `skill-evaluation-form-sheet.tsx` + `actions/skill-evaluation-mutations.ts`.
+
+Implementation notes for future reference:
+
+- `src/lib/api/applications.ts` gained nested `rounds`/`questions`/`skillEvaluations`
+  sub-clients (matching the backend's own nested REST routes) instead of new
+  top-level API client files.
+- `src/lib/api/reference-data.ts` gained `interviewTypes()` and `skills()`.
+- No contract or backend changes were needed — everything already existed.
+- Manual browser QA of the full create/edit/delete flow is still pending
+  (see Priority P2 for the automated-testing gap this currently relies on).
 
 ## Priority P1 — Core analytics value
 

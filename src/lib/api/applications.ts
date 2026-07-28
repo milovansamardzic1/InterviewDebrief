@@ -2,7 +2,16 @@ import type {
   ApplicationDetail,
   ApplicationListResponse,
   CreateApplicationRequest,
+  CreateInterviewRoundRequest,
+  CreateQuestionRequest,
+  CreateSkillEvaluationRequest,
+  InterviewRoundResponse,
+  QuestionResponse,
+  SkillEvaluationResponse,
   UpdateApplicationRequest,
+  UpdateInterviewRoundRequest,
+  UpdateQuestionRequest,
+  UpdateSkillEvaluationRequest,
 } from "@interwjuer/contracts";
 
 import { api, isNotFound } from "@/lib/api/client";
@@ -35,5 +44,91 @@ export const applicationsApi = {
 
       throw error;
     }
+  },
+
+  rounds: {
+    create(applicationId: string, body: CreateInterviewRoundRequest) {
+      return api.post<InterviewRoundResponse>(
+        `/applications/${applicationId}/rounds`,
+        body,
+      );
+    },
+
+    update(
+      applicationId: string,
+      roundId: string,
+      body: UpdateInterviewRoundRequest,
+    ) {
+      return api.patch<InterviewRoundResponse>(
+        `/applications/${applicationId}/rounds/${roundId}`,
+        body,
+      );
+    },
+
+    delete(applicationId: string, roundId: string) {
+      return api.delete(`/applications/${applicationId}/rounds/${roundId}`);
+    },
+  },
+
+  questions: {
+    create(
+      applicationId: string,
+      roundId: string,
+      body: CreateQuestionRequest,
+    ) {
+      return api.post<QuestionResponse>(
+        `/applications/${applicationId}/rounds/${roundId}/questions`,
+        body,
+      );
+    },
+
+    update(
+      applicationId: string,
+      roundId: string,
+      questionId: string,
+      body: UpdateQuestionRequest,
+    ) {
+      return api.patch<QuestionResponse>(
+        `/applications/${applicationId}/rounds/${roundId}/questions/${questionId}`,
+        body,
+      );
+    },
+
+    delete(applicationId: string, roundId: string, questionId: string) {
+      return api.delete(
+        `/applications/${applicationId}/rounds/${roundId}/questions/${questionId}`,
+      );
+    },
+  },
+
+  skillEvaluations: {
+    create(
+      applicationId: string,
+      roundId: string,
+      body: CreateSkillEvaluationRequest,
+    ) {
+      return api.post<SkillEvaluationResponse>(
+        `/applications/${applicationId}/rounds/${roundId}/skill-evaluations`,
+        body,
+      );
+    },
+
+    update(
+      applicationId: string,
+      roundId: string,
+      evaluationId: string,
+      body: UpdateSkillEvaluationRequest,
+    ) {
+      return api.patch<SkillEvaluationResponse>(
+        `/applications/${applicationId}/rounds/${roundId}/skill-evaluations/${evaluationId}`,
+        body,
+      );
+    },
+
+    delete(applicationId: string, roundId: string, evaluationId: string) {
+      return api.delete(
+        `/applications/${applicationId}/rounds/${roundId}/skill-evaluations/${evaluationId}`,
+      );
+    },
   },
 };
