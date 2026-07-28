@@ -4,17 +4,8 @@ import type {
   RegisterRequest,
 } from "@interwjuer/contracts";
 
+import { getApiUrl } from "@/lib/api/client";
 import { AUTH_COOKIE_MAX_AGE_SECONDS } from "@/lib/auth/constants";
-
-function getApiUrl() {
-  const apiUrl = process.env.API_URL;
-
-  if (apiUrl) {
-    return apiUrl.replace(/\/$/, "");
-  }
-
-  return "http://localhost:4000";
-}
 
 function parseAccessTokenFromResponse(response: Response): string | null {
   const setCookies =
@@ -56,7 +47,9 @@ export async function loginWithApi(
     cache: "no-store",
   });
 
-  const data = (await response.json()) as AuthSessionResponse | { error?: string };
+  const data = (await response.json()) as
+    | AuthSessionResponse
+    | { error?: string };
 
   if (!response.ok) {
     return {
@@ -105,7 +98,9 @@ export async function registerWithApi(
     cache: "no-store",
   });
 
-  const data = (await response.json()) as AuthSessionResponse | { error?: string };
+  const data = (await response.json()) as
+    | AuthSessionResponse
+    | { error?: string };
 
   if (!response.ok) {
     return {

@@ -1,3 +1,4 @@
+import { loadEnv } from "@/lib/config/env";
 import { getAuthHeaders } from "@/lib/auth/session";
 import { ApiError } from "@/lib/api/errors";
 
@@ -15,14 +16,8 @@ function parseJsonWithDates(text: string): unknown {
   });
 }
 
-function getApiUrl() {
-  const apiUrl = process.env.API_URL;
-
-  if (apiUrl) {
-    return apiUrl.replace(/\/$/, "");
-  }
-
-  return "http://localhost:4000";
+export function getApiUrl() {
+  return loadEnv().API_URL.replace(/\/$/, "");
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

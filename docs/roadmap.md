@@ -85,19 +85,44 @@ Implementation notes for future reference:
 - No new frontend dependency was added for the progress-over-time chart — a
   lightweight CSS bar visualization was used instead of a charting library.
 
-## Priority P2 — Quality & hardening
+## Priority P2 — Quality & hardening 🟡 First slice done
 
 **Why third:** once there's a real, usable feature surface (P0+P1), tests and
 CI protect it instead of testing a shell.
 
-- [ ] ⛔ **Testing setup** — add a test runner to `apps/api` and cover the
-      highest-value branching logic (state transitions, auth, not-found
-      guards in use cases).
-- [ ] ⛔ **CI pipeline** — lint, typecheck, test, build on push/PR.
-- [ ] ⛔ **Env validation hardening** — validate `process.env` with a shared,
-      cached schema on both frontend and backend instead of ad-hoc reads.
-- [ ] ⛔ **Empty/loading/error state audit** — make sure every P0/P1 view
-      handles the empty, loading, and error cases explicitly.
+- [x] 🟡 **Testing setup** — Vitest added to `apps/api`; 9 test files /
+      40 unit tests cover the highest-value branching logic (round status
+      transitions, auth login/register, and the `NotFoundError` guard +
+      mapping logic in every mutation/list use case). **Deferred:** Prisma
+      repository integration tests (needs a test database) and a Playwright
+      E2E smoke path (register → create application → add round → add
+      question → add skill evaluation → see it on dashboard) — both need
+      more infra (DB service container / both apps running together) than
+      this pass scoped in.
+- [x] ✅ **CI pipeline** — `.github/workflows/ci.yml` runs on push/PR to
+      `main`: install, `pnpm lint`, `pnpm format:check`, `pnpm typecheck`
+      (new root + `apps/api` scripts), `pnpm test`, `pnpm build`. No database
+      service container needed — nothing in this pipeline touches a live DB.
+- [x] ✅ **Env validation hardening** — `src/lib/config/env.ts` mirrors the
+      backend's Zod-based `loadEnv()` pattern; `API_URL` (was duplicated in
+      `client.ts` and `auth/api.ts`) and `JWT_EXPIRES_IN_SECONDS` (was a raw
+      `Number(process.env...)` in `auth/constants.ts`) are now read from one
+      validated, cached source.
+- [x] ✅ **Empty/loading/error state audit** — added the `loading.tsx`
+      skeletons that were missing for `/`, `/applications`, and `/questions`;
+      added a shared `error.tsx` boundary (dashboard route group) so an API
+      failure shows a retry UI instead of Next's default error overlay; added
+      a dedicated empty state to `StatsOverview` for zero applications.
+
+Implementation notes for future reference:
+
+- Use-case unit tests use small hand-written in-memory fakes per test file
+  (each implementing the relevant repository port) — no mocking framework,
+  consistent with existing project conventions.
+- `apps/api/tsconfig.build.json` (extends the base config, excludes
+  `**/*.test.ts`) is now what `apps/api`'s `build` script compiles with, so
+  test files aren't emitted into `dist`; `typecheck` still uses the base
+  config so type errors in tests are still caught.
 
 ## Priority P3 — Polish / later
 

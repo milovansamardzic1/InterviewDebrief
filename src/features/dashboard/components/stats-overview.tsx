@@ -1,5 +1,8 @@
 import type { DashboardStats } from "@interwjuer/contracts";
+import { ClipboardList } from "lucide-react";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { ProgressOverTime } from "@/features/dashboard/components/progress-over-time";
 
 type StatsOverviewProps = {
@@ -25,6 +28,27 @@ const countItems: Array<{
 ];
 
 export function StatsOverview({ stats }: StatsOverviewProps) {
+  if (stats.jobApplications === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center">
+        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+          <ClipboardList
+            className="size-6 text-muted-foreground"
+            strokeWidth={2}
+          />
+        </div>
+        <h2 className="text-lg font-medium">Još nemaš nijednu prijavu</h2>
+        <p className="mt-1 max-w-sm text-base text-muted-foreground">
+          Dodaj prvu prijavu da bi počeo da pratiš status, intervju runde i
+          napredak kroz proces.
+        </p>
+        <Button className="mt-6" render={<Link href="/applications" />}>
+          Dodaj prijavu
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
