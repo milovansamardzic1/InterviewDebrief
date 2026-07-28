@@ -1,3 +1,6 @@
+import type { ApplicationStatus } from "@interwjuer/contracts";
+
+import { ApplicationFilters } from "@/features/job-applications/components/application-filters";
 import { ApplicationFormSheet } from "@/features/job-applications/components/application-form-sheet";
 import { ApplicationList } from "@/features/job-applications/components/application-list";
 import { applicationsApi } from "@/lib/api/applications";
@@ -5,9 +8,33 @@ import { referenceDataApi } from "@/lib/api/reference-data";
 
 export const dynamic = "force-dynamic";
 
-export default async function ApplicationsPage() {
+type ApplicationsPageProps = {
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    applicationSourceId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }>;
+};
+
+export default async function ApplicationsPage({
+  searchParams,
+}: ApplicationsPageProps) {
+  const { search, status, applicationSourceId, dateFrom, dateTo } =
+    await searchParams;
+  const hasActiveFilters = Boolean(
+    search || status || applicationSourceId || dateFrom || dateTo,
+  );
+
   const [{ items: applications }, applicationSources] = await Promise.all([
-    applicationsApi.list(),
+    applicationsApi.list({
+      search,
+      status: status as ApplicationStatus | undefined,
+      applicationSourceId,
+      dateFrom,
+      dateTo,
+    }),
     referenceDataApi.applicationSources(),
   ]);
 
@@ -31,7 +58,19 @@ export default async function ApplicationsPage() {
         </div>
       </header>
 
-      <ApplicationList applications={applications} />
+      <ApplicationFilters
+        applicationSources={applicationSources}
+        search={search}
+        status={status as ApplicationStatus | undefined}
+        applicationSourceId={applicationSourceId}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+      />
+
+      <ApplicationList
+        applications={applications}
+        hasActiveFilters={hasActiveFilters}
+      />
     </main>
   );
 }

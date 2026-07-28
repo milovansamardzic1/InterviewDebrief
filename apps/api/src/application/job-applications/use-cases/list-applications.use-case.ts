@@ -1,4 +1,8 @@
-import type { ApplicationListItem, ApplicationListResponse } from "@interwjuer/contracts";
+import type {
+  ApplicationListItem,
+  ApplicationListResponse,
+  ApplicationStatus,
+} from "@interwjuer/contracts";
 
 import type { JobApplicationsRepository } from "../ports/job-applications.repository.js";
 import type { ApplicationListRecord } from "../read-models/application-list.record.js";
@@ -7,6 +11,11 @@ export type ListApplicationsInput = {
   userId: string;
   limit?: number;
   cursor?: string;
+  search?: string;
+  status?: ApplicationStatus;
+  applicationSourceId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
 };
 
 function toApplicationListItem(
@@ -43,11 +52,18 @@ function toApplicationListItem(
 export class ListApplicationsUseCase {
   constructor(private readonly repository: JobApplicationsRepository) {}
 
-  async execute(input: ListApplicationsInput): Promise<ApplicationListResponse> {
+  async execute(
+    input: ListApplicationsInput,
+  ): Promise<ApplicationListResponse> {
     const result = await this.repository.findManyForList({
       userId: input.userId,
       limit: input.limit,
       cursor: input.cursor,
+      search: input.search,
+      status: input.status,
+      applicationSourceId: input.applicationSourceId,
+      dateFrom: input.dateFrom,
+      dateTo: input.dateTo,
     });
 
     return {

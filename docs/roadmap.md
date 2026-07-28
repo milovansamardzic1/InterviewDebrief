@@ -11,14 +11,14 @@ intent.
 
 ## Already done (context — do not re-plan)
 
-| Area                 | Status | Notes                                                                                                                 |
-| -------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
-| Auth                 | ✅     | Register/login/logout/me, JWT (`jose`) + bcrypt, httpOnly cookie, login+register combined UI at `/login`              |
-| Job Applications     | ✅     | Full CRUD, backend + frontend (list, detail, form sheet, delete, status badge)                                        |
-| Interview Rounds     | ✅     | Full CRUD, backend + frontend (`round-form-sheet.tsx`, `delete-round-button.tsx`)                                     |
-| Questions            | ✅     | Full CRUD, backend + frontend (`question-form-sheet.tsx`, `delete-question-button.tsx`)                               |
-| Skill Evaluations    | ✅     | Full CRUD, backend + frontend (`skill-evaluation-form-sheet.tsx`, `delete-skill-evaluation-button.tsx`)               |
-| Reference data       | ✅     | Application sources, interview types, skills — read endpoints + client methods                                        |
+| Area                 | Status | Notes                                                                                                                             |
+| -------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| Auth                 | ✅     | Register/login/logout/me, JWT (`jose`) + bcrypt, httpOnly cookie, login+register combined UI at `/login`                          |
+| Job Applications     | ✅     | Full CRUD, backend + frontend (list, detail, form sheet, delete, status badge)                                                    |
+| Interview Rounds     | ✅     | Full CRUD, backend + frontend (`round-form-sheet.tsx`, `delete-round-button.tsx`)                                                 |
+| Questions            | ✅     | Full CRUD, backend + frontend (`question-form-sheet.tsx`, `delete-question-button.tsx`)                                           |
+| Skill Evaluations    | ✅     | Full CRUD, backend + frontend (`skill-evaluation-form-sheet.tsx`, `delete-skill-evaluation-button.tsx`)                           |
+| Reference data       | ✅     | Application sources, interview types, skills — read endpoints + client methods                                                    |
 | Dashboard (backend)  | ✅     | `get-dashboard-stats` use case; includes weak skills, topic counts, status breakdown, monthly progress (rounds + avg skill score) |
 | Dashboard (frontend) | ✅     | `StatsOverview` renders counts, weakest areas, questions by topic, and progress over time                                         |
 | Question history     | ✅     | `/questions` page — cross-application list, filterable by topic, links back to the source round                                   |
@@ -124,9 +124,19 @@ Implementation notes for future reference:
   test files aren't emitted into `dist`; `typecheck` still uses the base
   config so type errors in tests are still caught.
 
-## Priority P3 — Polish / later
+## Priority P3 — Polish / later 🟡 First slice done
 
-- [ ] ⛔ Search & filtering on the applications list (status, source, date range)
+- [x] ✅ **Search & filtering on the applications list** — free-text search
+      (company/position, case-insensitive `contains`) plus status, source, and
+      an inclusive application-date range, all combinable and passed through
+      cursor pagination unchanged. Implemented end-to-end: `FindManyApplicationsOptions`
+      → `ListApplicationsUseCase` → `ListApplicationsQuerySchema` →
+      `GET /applications` → `applicationsApi.list()` (now an options object) →
+      a zero-JS Server Component filter bar (`application-filters.tsx`, a plain
+      GET form with native `<select>`s to avoid shipping client JS for the
+      Base UI `Select`) → `ApplicationList`'s empty state now distinguishes
+      "no applications at all" from "no applications match these filters"
+      (mirrors the existing `topic` pattern in `question-history-list.tsx`).
 - [ ] ⛔ Deployment docs + a real target (Vercel for web, Railway/Fly.io for API)
 - [ ] ⛔ Error tracking (Sentry) once there's real traffic
 

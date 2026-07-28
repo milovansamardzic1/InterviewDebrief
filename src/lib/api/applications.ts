@@ -1,6 +1,7 @@
 import type {
   ApplicationDetail,
   ApplicationListResponse,
+  ApplicationStatus,
   CreateApplicationRequest,
   CreateInterviewRoundRequest,
   CreateQuestionRequest,
@@ -16,10 +17,32 @@ import type {
 
 import { api, isNotFound } from "@/lib/api/client";
 
+export type ListApplicationsOptions = {
+  cursor?: string;
+  search?: string;
+  status?: ApplicationStatus;
+  applicationSourceId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
 export const applicationsApi = {
-  list(cursor?: string) {
-    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-    return api.get<ApplicationListResponse>(`/applications${query}`);
+  list(options: ListApplicationsOptions = {}) {
+    const params = new URLSearchParams();
+
+    if (options.cursor) params.set("cursor", options.cursor);
+    if (options.search) params.set("search", options.search);
+    if (options.status) params.set("status", options.status);
+    if (options.applicationSourceId) {
+      params.set("applicationSourceId", options.applicationSourceId);
+    }
+    if (options.dateFrom) params.set("dateFrom", options.dateFrom);
+    if (options.dateTo) params.set("dateTo", options.dateTo);
+
+    const query = params.toString();
+    return api.get<ApplicationListResponse>(
+      `/applications${query ? `?${query}` : ""}`,
+    );
   },
 
   create(body: CreateApplicationRequest) {

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 import type {
   CreateApplicationData,
@@ -20,6 +20,40 @@ import { runPrismaOperation } from "./prisma-error.js";
 const DEFAULT_LIST_LIMIT = 50;
 const MAX_LIST_LIMIT = 100;
 
+function endOfDay(date: Date): Date {
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+function buildListWhere(
+  options: FindManyApplicationsOptions,
+): Prisma.JobApplicationWhereInput {
+  return {
+    userId: options.userId,
+    ...(options.status ? { applicationStatus: options.status } : {}),
+    ...(options.applicationSourceId
+      ? { applicationSourceId: options.applicationSourceId }
+      : {}),
+    ...(options.dateFrom || options.dateTo
+      ? {
+          applicationDate: {
+            ...(options.dateFrom ? { gte: options.dateFrom } : {}),
+            ...(options.dateTo ? { lte: endOfDay(options.dateTo) } : {}),
+          },
+        }
+      : {}),
+    ...(options.search
+      ? {
+          OR: [
+            { company: { contains: options.search, mode: "insensitive" } },
+            { position: { contains: options.search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+}
+
 export class PrismaJobApplicationsRepository implements JobApplicationsRepository {
   constructor(
     private readonly db: PrismaClient,
@@ -27,14 +61,15 @@ export class PrismaJobApplicationsRepository implements JobApplicationsRepositor
   ) {}
 
   async findManyForList(options: FindManyApplicationsOptions) {
-    const take = Math.min(options.limit ?? DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT) + 1;
+    const take =
+      Math.min(options.limit ?? DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT) + 1;
 
     const applications = await runPrismaOperation(
       "jobApplication.findManyForList",
       this.logger,
       () =>
         this.db.jobApplication.findMany({
-          where: { userId: options.userId },
+          where: buildListWhere(options),
           orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
           take,
           ...(options.cursor
@@ -144,8 +179,12 @@ export class PrismaJobApplicationsRepository implements JobApplicationsRepositor
               ? { applicationDate: data.applicationDate }
               : {}),
             ...(data.location !== undefined ? { location: data.location } : {}),
-            ...(data.salaryMin !== undefined ? { salaryMin: data.salaryMin } : {}),
-            ...(data.salaryMax !== undefined ? { salaryMax: data.salaryMax } : {}),
+            ...(data.salaryMin !== undefined
+              ? { salaryMin: data.salaryMin }
+              : {}),
+            ...(data.salaryMax !== undefined
+              ? { salaryMax: data.salaryMax }
+              : {}),
             ...(data.jobPostingUrl !== undefined
               ? { jobPostingUrl: data.jobPostingUrl }
               : {}),

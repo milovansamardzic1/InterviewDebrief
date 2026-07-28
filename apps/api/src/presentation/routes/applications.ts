@@ -54,12 +54,25 @@ export type ApplicationsRouteDeps = {
 export function createApplicationsRoutes(deps: ApplicationsRouteDeps) {
   return new Hono<{ Variables: AppVariables }>()
     .get("/", zValidator("query", ListApplicationsQuerySchema), async (c) => {
-      const { limit, cursor } = c.req.valid("query");
+      const {
+        limit,
+        cursor,
+        search,
+        status,
+        applicationSourceId,
+        dateFrom,
+        dateTo,
+      } = c.req.valid("query");
       const userId = c.get("userId");
       const applications = await deps.listApplications.execute({
         userId,
         limit,
         cursor,
+        search,
+        status,
+        applicationSourceId,
+        dateFrom,
+        dateTo,
       });
       return c.json(applications);
     })

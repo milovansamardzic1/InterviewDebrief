@@ -35,6 +35,11 @@ export type ApplicationIdParam = z.infer<typeof ApplicationIdParamSchema>;
 export const ListApplicationsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   cursor: cuid.optional(),
+  search: z.string().trim().min(1).max(200).optional(),
+  status: ApplicationStatusSchema.optional(),
+  applicationSourceId: cuid.optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
 });
 
 export type ListApplicationsQuery = z.infer<typeof ListApplicationsQuerySchema>;
@@ -53,9 +58,10 @@ export const CreateApplicationBodySchema = z.object({
   notes: z.string().max(10000).nullable().optional(),
 });
 
-export const UpdateApplicationBodySchema = CreateApplicationBodySchema.partial().extend({
-  rejectionReason: z.string().max(10000).nullable().optional(),
-});
+export const UpdateApplicationBodySchema =
+  CreateApplicationBodySchema.partial().extend({
+    rejectionReason: z.string().max(10000).nullable().optional(),
+  });
 
 export const ApplicationRoundParamsSchema = z.object({
   applicationId: cuid,

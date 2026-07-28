@@ -105,4 +105,39 @@ describe("ListApplicationsUseCase", () => {
 
     expect(result.nextCursor).toBe("cursor-abc");
   });
+
+  it("passes search/status/source/date filters through to the repository", async () => {
+    let receivedOptions: FindManyApplicationsOptions | null = null;
+
+    class CapturingRepository extends FakeJobApplicationsRepository {
+      async findManyForList(options: FindManyApplicationsOptions) {
+        receivedOptions = options;
+        return { items: [], nextCursor: null as string | null };
+      }
+    }
+    const useCase = new ListApplicationsUseCase(new CapturingRepository([]));
+
+    const dateFrom = new Date("2024-01-01");
+    const dateTo = new Date("2024-02-01");
+
+    await useCase.execute({
+      userId: "user-1",
+      search: "Acme",
+      status: "INTERVIEWING",
+      applicationSourceId: "source-1",
+      dateFrom,
+      dateTo,
+    });
+
+    expect(receivedOptions).toEqual({
+      userId: "user-1",
+      limit: undefined,
+      cursor: undefined,
+      search: "Acme",
+      status: "INTERVIEWING",
+      applicationSourceId: "source-1",
+      dateFrom,
+      dateTo,
+    });
+  });
 });

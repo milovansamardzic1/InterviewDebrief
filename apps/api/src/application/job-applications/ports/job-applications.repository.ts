@@ -7,6 +7,11 @@ export type FindManyApplicationsOptions = {
   userId: string;
   limit?: number;
   cursor?: string;
+  search?: string;
+  status?: ApplicationStatus;
+  applicationSourceId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
 };
 
 export type FindApplicationByIdOptions = {
