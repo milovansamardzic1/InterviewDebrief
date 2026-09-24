@@ -31,8 +31,9 @@ import {
   toSkillEvaluationRequestPayload,
   type SkillEvaluationFormValues,
 } from "@/features/job-applications/lib/skill-evaluation-form-schema";
+import { useControllableOpen } from "@/features/job-applications/lib/use-controllable-open";
 
-type SkillEvaluationFormSheetProps =
+type SkillEvaluationFormSheetProps = (
   | {
       mode: "create";
       applicationId: string;
@@ -45,11 +46,19 @@ type SkillEvaluationFormSheetProps =
       roundId: string;
       evaluation: ApplicationDetailSkillEvaluation;
       skills: SkillItem[];
-    };
+    }
+) & {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+};
 
 export function SkillEvaluationFormSheet(props: SkillEvaluationFormSheetProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useControllableOpen({
+    open: props.open,
+    onOpenChange: props.onOpenChange,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEdit = props.mode === "edit";
@@ -104,27 +113,29 @@ export function SkillEvaluationFormSheet(props: SkillEvaluationFormSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={
-          isEdit ? (
-            <Button variant="ghost" size="sm" />
+      {props.hideTrigger ? null : (
+        <SheetTrigger
+          render={
+            isEdit ? (
+              <Button variant="ghost" size="sm" />
+            ) : (
+              <Button variant="outline" size="sm" />
+            )
+          }
+        >
+          {isEdit ? (
+            <>
+              <Pencil />
+              Izmeni
+            </>
           ) : (
-            <Button variant="outline" size="sm" />
-          )
-        }
-      >
-        {isEdit ? (
-          <>
-            <Pencil />
-            Izmeni
-          </>
-        ) : (
-          <>
-            <Plus />
-            Dodaj evaluaciju
-          </>
-        )}
-      </SheetTrigger>
+            <>
+              <Plus />
+              Dodaj evaluaciju
+            </>
+          )}
+        </SheetTrigger>
+      )}
 
       <SheetContent className="flex w-full flex-col gap-0 sm:max-w-lg">
         <SheetHeader>

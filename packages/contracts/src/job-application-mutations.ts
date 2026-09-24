@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from "./enums.js";
+import type { ApplicationStatus, RejectionCategory } from "./enums.js";
 import type { ApplicationDetail } from "./job-applications.js";
 
 export type CreateApplicationRequest = {
@@ -12,6 +12,8 @@ export type CreateApplicationRequest = {
   jobPostingUrl?: string | null;
   jobDescription?: string | null;
   applicationStatus?: ApplicationStatus;
+  rejectionCategory?: RejectionCategory | null;
+  rejectionReason?: string | null;
   notes?: string | null;
 };
 
@@ -26,6 +28,7 @@ export type UpdateApplicationRequest = {
   jobPostingUrl?: string | null;
   jobDescription?: string | null;
   applicationStatus?: ApplicationStatus;
+  rejectionCategory?: RejectionCategory | null;
   rejectionReason?: string | null;
   notes?: string | null;
 };

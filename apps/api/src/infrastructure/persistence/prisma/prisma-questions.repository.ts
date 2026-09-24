@@ -186,8 +186,54 @@ export class PrismaQuestionsRepository implements QuestionsRepository {
       () =>
         this.db.question.findMany({
           where: {
-            interviewRound: { jobApplication: { userId: options.userId } },
+            interviewRound: {
+              jobApplication: {
+                userId: options.userId,
+                ...(options.company
+                  ? {
+                      company: {
+                        contains: options.company,
+                        mode: "insensitive",
+                      },
+                    }
+                  : {}),
+              },
+            },
             ...(options.topic ? { topic: options.topic } : {}),
+            ...(options.difficulty !== undefined
+              ? { difficulty: options.difficulty }
+              : {}),
+            ...(options.answeredOnly ? { myAnswer: { not: null } } : {}),
+            ...(options.search
+              ? {
+                  OR: [
+                    {
+                      question: {
+                        contains: options.search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      myAnswer: {
+                        contains: options.search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      notes: {
+                        contains: options.search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      topic: {
+                        contains: options.search,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                }
+              : {}),
           },
           orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           take,

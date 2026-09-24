@@ -26,6 +26,10 @@ export type ListQuestionHistoryOptions = {
   limit?: number;
   cursor?: string;
   topic?: string;
+  search?: string;
+  company?: string;
+  difficulty?: number;
+  answeredOnly?: boolean;
 };
 
 export type QuestionHistoryPage = {

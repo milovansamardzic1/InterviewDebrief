@@ -1,4 +1,7 @@
-import type { ApplicationStatus } from "@interwjuer/contracts";
+import type {
+  ApplicationStatus,
+  RejectionCategory,
+} from "@interwjuer/contracts";
 
 import type { ApplicationDetailRecord } from "../read-models/application-detail.record.js";
 import type { ApplicationListRecord } from "../read-models/application-list.record.js";
@@ -30,6 +33,8 @@ export type CreateApplicationData = {
   jobPostingUrl?: string | null;
   jobDescription?: string | null;
   applicationStatus?: ApplicationStatus;
+  rejectionCategory?: RejectionCategory | null;
+  rejectionReason?: string | null;
   notes?: string | null;
 };
 
@@ -44,6 +49,7 @@ export type UpdateApplicationData = {
   jobPostingUrl?: string | null;
   jobDescription?: string | null;
   applicationStatus?: ApplicationStatus;
+  rejectionCategory?: RejectionCategory | null;
   rejectionReason?: string | null;
   notes?: string | null;
 };

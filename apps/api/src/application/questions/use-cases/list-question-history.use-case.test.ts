@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type {
-  CreateQuestionData,
   ListQuestionHistoryOptions,
   QuestionsRepository,
-  UpdateQuestionData,
 } from "../ports/questions.repository.js";
 import type { QuestionHistoryRecord } from "../read-models/question-history.record.js";
 import { ListQuestionHistoryUseCase } from "./list-question-history.use-case.js";
@@ -24,6 +22,8 @@ const RECORD: QuestionHistoryRecord = {
 };
 
 class FakeQuestionsRepository implements QuestionsRepository {
+  lastHistoryOptions: ListQuestionHistoryOptions | null = null;
+
   constructor(
     private readonly page: {
       items: QuestionHistoryRecord[];
@@ -31,17 +31,11 @@ class FakeQuestionsRepository implements QuestionsRepository {
     },
   ) {}
 
-  async create(_data: CreateQuestionData) {
+  async create() {
     return null;
   }
 
-  async update(
-    _applicationId: string,
-    _roundId: string,
-    _questionId: string,
-    _userId: string,
-    _data: UpdateQuestionData,
-  ) {
+  async update() {
     return null;
   }
 
@@ -49,7 +43,8 @@ class FakeQuestionsRepository implements QuestionsRepository {
     return false;
   }
 
-  async listHistoryForUser(_options: ListQuestionHistoryOptions) {
+  async listHistoryForUser(options: ListQuestionHistoryOptions) {
+    this.lastHistoryOptions = options;
     return this.page;
   }
 }
@@ -91,5 +86,35 @@ describe("ListQuestionHistoryUseCase", () => {
     const result = await useCase.execute({ userId: "user-1" });
 
     expect(result).toEqual({ items: [], nextCursor: null });
+  });
+
+  it("passes history filters to the repository", async () => {
+    const repository = new FakeQuestionsRepository({
+      items: [],
+      nextCursor: null,
+    });
+    const useCase = new ListQuestionHistoryUseCase(repository);
+
+    await useCase.execute({
+      userId: "user-1",
+      limit: 25,
+      cursor: "question-cursor",
+      topic: "JavaScript",
+      search: "closure",
+      company: "Acme",
+      difficulty: 3,
+      answeredOnly: true,
+    });
+
+    expect(repository.lastHistoryOptions).toEqual({
+      userId: "user-1",
+      limit: 25,
+      cursor: "question-cursor",
+      topic: "JavaScript",
+      search: "closure",
+      company: "Acme",
+      difficulty: 3,
+      answeredOnly: true,
+    });
   });
 });

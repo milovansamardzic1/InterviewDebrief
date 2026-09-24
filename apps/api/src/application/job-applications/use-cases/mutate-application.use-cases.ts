@@ -1,6 +1,9 @@
 import type { ApplicationDetail } from "@interwjuer/contracts";
 
-import { assertCondition, assertResourceExists } from "../../shared/assert-resource.js";
+import {
+  assertCondition,
+  assertResourceExists,
+} from "../../shared/assert-resource.js";
 import type { JobApplicationsRepository } from "../ports/job-applications.repository.js";
 import type { ApplicationDetailRecord } from "../read-models/application-detail.record.js";
 
@@ -18,6 +21,7 @@ function toApplicationDetail(
     salaryMax: application.salaryMax,
     jobPostingUrl: application.jobPostingUrl,
     jobDescription: application.jobDescription,
+    rejectionCategory: application.rejectionCategory,
     rejectionReason: application.rejectionReason,
     notes: application.notes,
     sourceName: application.sourceName,
@@ -48,6 +52,8 @@ export type CreateApplicationInput = {
   jobPostingUrl?: string | null;
   jobDescription?: string | null;
   applicationStatus?: import("@interwjuer/contracts").ApplicationStatus;
+  rejectionCategory?: import("@interwjuer/contracts").RejectionCategory | null;
+  rejectionReason?: string | null;
   notes?: string | null;
 };
 
@@ -67,6 +73,10 @@ export class CreateApplicationUseCase {
       jobPostingUrl: input.jobPostingUrl,
       jobDescription: input.jobDescription,
       applicationStatus: input.applicationStatus,
+      rejectionCategory:
+        input.applicationStatus === "REJECTED" ? input.rejectionCategory : null,
+      rejectionReason:
+        input.applicationStatus === "REJECTED" ? input.rejectionReason : null,
       notes: input.notes,
     });
 
@@ -87,6 +97,7 @@ export type UpdateApplicationInput = {
   jobPostingUrl?: string | null;
   jobDescription?: string | null;
   applicationStatus?: import("@interwjuer/contracts").ApplicationStatus;
+  rejectionCategory?: import("@interwjuer/contracts").RejectionCategory | null;
   rejectionReason?: string | null;
   notes?: string | null;
 };
@@ -95,6 +106,9 @@ export class UpdateApplicationUseCase {
   constructor(private readonly repository: JobApplicationsRepository) {}
 
   async execute(input: UpdateApplicationInput): Promise<ApplicationDetail> {
+    const clearsRejection =
+      input.applicationStatus !== undefined &&
+      input.applicationStatus !== "REJECTED";
     const application = await this.repository.update(input.id, input.userId, {
       company: input.company,
       position: input.position,
@@ -106,11 +120,16 @@ export class UpdateApplicationUseCase {
       jobPostingUrl: input.jobPostingUrl,
       jobDescription: input.jobDescription,
       applicationStatus: input.applicationStatus,
-      rejectionReason: input.rejectionReason,
+      rejectionCategory: clearsRejection ? null : input.rejectionCategory,
+      rejectionReason: clearsRejection ? null : input.rejectionReason,
       notes: input.notes,
     });
 
-    assertResourceExists(application, "Application not found", "APPLICATION_NOT_FOUND");
+    assertResourceExists(
+      application,
+      "Application not found",
+      "APPLICATION_NOT_FOUND",
+    );
     return toApplicationDetail(application);
   }
 }

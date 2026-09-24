@@ -27,6 +27,7 @@ import {
   applicationStatusOptions,
   type ApplicationFormValues,
 } from "@/features/job-applications/lib/application-form-schema";
+import { rejectionCategoryOptions } from "@/features/rejection-insights/lib/rejection-categories";
 
 type ApplicationFormProps = {
   formId: string;
@@ -241,19 +242,54 @@ export function ApplicationForm({
           />
 
           {status === "REJECTED" ? (
-            <FormField
-              control={form.control}
-              name="rejectionReason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Razlog odbijanja</FormLabel>
-                  <FormControl>
-                    <Textarea rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <>
+              <FormField
+                control={form.control}
+                name="rejectionCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kategorija odbijanja</FormLabel>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                      items={Object.fromEntries(
+                        rejectionCategoryOptions.map((option) => [
+                          option.value,
+                          option.label,
+                        ]),
+                      )}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Izaberi kategoriju" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {rejectionCategoryOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="rejectionReason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Detalji odbijanja</FormLabel>
+                    <FormControl>
+                      <Textarea rows={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
           ) : null}
 
           <FormField

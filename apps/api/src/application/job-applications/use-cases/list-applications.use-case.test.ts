@@ -106,7 +106,7 @@ describe("ListApplicationsUseCase", () => {
     expect(result.nextCursor).toBe("cursor-abc");
   });
 
-  it("passes search/status/source/date filters through to the repository", async () => {
+  it("passes pagination and filters through to the repository", async () => {
     let receivedOptions: FindManyApplicationsOptions | null = null;
 
     class CapturingRepository extends FakeJobApplicationsRepository {
@@ -122,6 +122,8 @@ describe("ListApplicationsUseCase", () => {
 
     await useCase.execute({
       userId: "user-1",
+      limit: 12,
+      cursor: "application-12",
       search: "Acme",
       status: "INTERVIEWING",
       applicationSourceId: "source-1",
@@ -131,8 +133,8 @@ describe("ListApplicationsUseCase", () => {
 
     expect(receivedOptions).toEqual({
       userId: "user-1",
-      limit: undefined,
-      cursor: undefined,
+      limit: 12,
+      cursor: "application-12",
       search: "Acme",
       status: "INTERVIEWING",
       applicationSourceId: "source-1",

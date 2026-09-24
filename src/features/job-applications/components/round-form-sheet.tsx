@@ -31,8 +31,9 @@ import {
   toInterviewRoundRequestPayload,
   type RoundFormValues,
 } from "@/features/job-applications/lib/round-form-schema";
+import { useControllableOpen } from "@/features/job-applications/lib/use-controllable-open";
 
-type RoundFormSheetProps =
+type RoundFormSheetProps = (
   | {
       mode: "create";
       applicationId: string;
@@ -44,11 +45,19 @@ type RoundFormSheetProps =
       applicationId: string;
       round: ApplicationDetailRound;
       interviewTypes: InterviewTypeItem[];
-    };
+    }
+) & {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+};
 
 export function RoundFormSheet(props: RoundFormSheetProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useControllableOpen({
+    open: props.open,
+    onOpenChange: props.onOpenChange,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEdit = props.mode === "edit";
@@ -98,23 +107,29 @@ export function RoundFormSheet(props: RoundFormSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={
-          isEdit ? <Button variant="outline" size="sm" /> : <Button size="sm" />
-        }
-      >
-        {isEdit ? (
-          <>
-            <Pencil />
-            Izmeni
-          </>
-        ) : (
-          <>
-            <Plus />
-            Dodaj rundu
-          </>
-        )}
-      </SheetTrigger>
+      {props.hideTrigger ? null : (
+        <SheetTrigger
+          render={
+            isEdit ? (
+              <Button variant="outline" size="sm" />
+            ) : (
+              <Button size="sm" />
+            )
+          }
+        >
+          {isEdit ? (
+            <>
+              <Pencil />
+              Izmeni
+            </>
+          ) : (
+            <>
+              <Plus />
+              Dodaj rundu
+            </>
+          )}
+        </SheetTrigger>
+      )}
 
       <SheetContent className="flex w-full flex-col gap-0 sm:max-w-lg">
         <SheetHeader>

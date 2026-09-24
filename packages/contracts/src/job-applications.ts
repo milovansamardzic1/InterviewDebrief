@@ -1,4 +1,8 @@
-import type { ApplicationStatus, InterviewRoundStatus } from "./enums.js";
+import type {
+  ApplicationStatus,
+  InterviewRoundStatus,
+  RejectionCategory,
+} from "./enums.js";
 
 export type ApplicationListRound = {
   id: string;
@@ -65,6 +69,7 @@ export type ApplicationDetail = {
   salaryMax: number | null;
   jobPostingUrl: string | null;
   jobDescription: string | null;
+  rejectionCategory: RejectionCategory | null;
   rejectionReason: string | null;
   notes: string | null;
   sourceName: string;

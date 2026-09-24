@@ -4,6 +4,10 @@ import { api } from "@/lib/api/client";
 
 export type QuestionHistoryParams = {
   topic?: string;
+  search?: string;
+  company?: string;
+  difficulty?: number;
+  answeredOnly?: boolean;
   cursor?: string;
 };
 
@@ -13,6 +17,22 @@ export const questionsApi = {
 
     if (params.topic) {
       query.set("topic", params.topic);
+    }
+
+    if (params.search) {
+      query.set("search", params.search);
+    }
+
+    if (params.company) {
+      query.set("company", params.company);
+    }
+
+    if (params.difficulty !== undefined) {
+      query.set("difficulty", String(params.difficulty));
+    }
+
+    if (params.answeredOnly) {
+      query.set("answeredOnly", "true");
     }
 
     if (params.cursor) {

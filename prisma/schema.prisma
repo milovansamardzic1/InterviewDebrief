@@ -17,6 +17,29 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
+enum RejectionCategory {
+  TECHNICAL_SKILLS
+  SYSTEM_DESIGN
+  PROBLEM_SOLVING
+  COMMUNICATION
+  EXPERIENCE_FIT
+  COMPENSATION
+  POSITION_CLOSED
+  OTHER
+}
+
+enum LearningTaskStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum LearningTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 enum InterviewRoundStatus {
   SCHEDULED
   IN_PROGRESS
@@ -34,6 +57,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   jobApplications JobApplication[]
+  learningTasks   LearningTask[]
 
   @@map("users")
 }
@@ -48,22 +72,23 @@ model ApplicationSource {
 }
 
 model JobApplication {
-  id                  String            @id @default(cuid())
-  userId              String            @map("user_id")
+  id                  String             @id @default(cuid())
+  userId              String             @map("user_id")
   company             String
   position            String
-  applicationSourceId String            @map("application_source_id")
-  applicationDate     DateTime          @map("application_date")
+  applicationSourceId String             @map("application_source_id")
+  applicationDate     DateTime           @map("application_date")
   location            String?
-  salaryMin           Int?              @map("salary_min")
-  salaryMax           Int?              @map("salary_max")
-  jobPostingUrl       String?           @map("job_posting_url")
-  jobDescription      String?           @map("job_description") @db.Text
-  applicationStatus   ApplicationStatus @default(APPLIED) @map("application_status")
-  rejectionReason     String?           @map("rejection_reason") @db.Text
-  notes               String?           @db.Text
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
+  salaryMin           Int?               @map("salary_min")
+  salaryMax           Int?               @map("salary_max")
+  jobPostingUrl       String?            @map("job_posting_url")
+  jobDescription      String?            @map("job_description") @db.Text
+  applicationStatus   ApplicationStatus  @default(APPLIED) @map("application_status")
+  rejectionCategory   RejectionCategory? @map("rejection_category")
+  rejectionReason     String?            @map("rejection_reason") @db.Text
+  notes               String?            @db.Text
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
 
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   applicationSource ApplicationSource @relation(fields: [applicationSourceId], references: [id], onDelete: Restrict)
@@ -130,8 +155,31 @@ model Skill {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   skillEvaluations SkillEvaluation[]
+  learningTasks    LearningTask[]
 
   @@map("skills")
+}
+
+model LearningTask {
+  id          String               @id @default(cuid())
+  userId      String               @map("user_id")
+  skillId     String               @map("skill_id")
+  title       String
+  status      LearningTaskStatus   @default(PLANNED)
+  priority    LearningTaskPriority @default(MEDIUM)
+  dueDate     DateTime?            @map("due_date")
+  notes       String?              @db.Text
+  completedAt DateTime?            @map("completed_at")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([skillId])
+  @@map("learning_tasks")
 }
 
 model SkillEvaluation {

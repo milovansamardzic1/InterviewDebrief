@@ -1,6 +1,9 @@
 import type { QuestionResponse } from "@interwjuer/contracts";
 
-import { assertCondition, assertResourceExists } from "../../shared/assert-resource.js";
+import {
+  assertCondition,
+  assertResourceExists,
+} from "../../shared/assert-resource.js";
 import type { QuestionsRepository } from "../ports/questions.repository.js";
 
 export type CreateQuestionInput = {

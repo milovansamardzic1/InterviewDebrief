@@ -19,29 +19,29 @@ features. Open polish items (deploy docs, Sentry, deferred tests) stay on the
 backlog but do **not** block P4+ product work unless the user asks to ship or
 harden first.
 
-**Default next product slice:** Priority P4 — Learning plan / study focus from
-weak skills (closes the vision gap: “fokusira pripremu na ono što mu zaista
-nedostaje”). Other P4+ ideas can be added below; prefer one shippable slice at
-a time.
+**Default next product slice:** leftover P3 polish (deploy docs) or a new P4+
+candidate below — P4 learning plan is done. Other ideas can be added; prefer
+one shippable slice at a time.
 
 **Git base for new work:** branch from current `master` (clean). Do not assume
 unmerged stacked feature branches still exist.
 
 ## Already done (context — do not re-plan)
 
-| Area                 | Status | Notes                                                                                                                             |
-| -------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Auth                 | ✅     | Register/login/logout/me, JWT (`jose`) + bcrypt, httpOnly cookie, login+register combined UI at `/login`                          |
-| Job Applications     | ✅     | Full CRUD, backend + frontend (list, detail, form sheet, delete, status badge); list search/filters (company/position, status, source, date range) |
-| Interview Rounds     | ✅     | Full CRUD, backend + frontend (`round-form-sheet.tsx`, `delete-round-button.tsx`)                                                 |
-| Questions            | ✅     | Full CRUD, backend + frontend (`question-form-sheet.tsx`, `delete-question-button.tsx`)                                           |
-| Skill Evaluations    | ✅     | Full CRUD, backend + frontend (`skill-evaluation-form-sheet.tsx`, `delete-skill-evaluation-button.tsx`)                           |
-| Reference data       | ✅     | Application sources, interview types, skills — read endpoints + client methods                                                    |
-| Dashboard (backend)  | ✅     | `get-dashboard-stats` use case; includes weak skills, topic counts, status breakdown, monthly progress (rounds + avg skill score) |
-| Dashboard (frontend) | ✅     | `StatsOverview` renders counts, weakest areas, questions by topic, and progress over time                                         |
-| Question history     | ✅     | `/questions` page — cross-application list, filterable by topic, links back to the source round                                   |
-| Cursor rules / docs  | ✅     | `.cursor/rules/*.mdc`, `docs/roadmap.md`, Docker Postgres compose + DB docs                                                       |
-| Quality (first slice)| 🟡     | Vitest use-case tests, GitHub Actions CI, frontend env validation, empty/loading/error states — see P2 deferred items             |
+| Area                  | Status | Notes                                                                                                                                              |
+| --------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth                  | ✅     | Register/login/logout/me, JWT (`jose`) + bcrypt, httpOnly cookie, login+register combined UI at `/login`                                           |
+| Job Applications      | ✅     | Full CRUD, backend + frontend (list, detail, form sheet, delete, status badge); list search/filters (company/position, status, source, date range) |
+| Interview Rounds      | ✅     | Full CRUD, backend + frontend (`round-form-sheet.tsx`, `delete-round-button.tsx`)                                                                  |
+| Questions             | ✅     | Full CRUD, backend + frontend (`question-form-sheet.tsx`, `delete-question-button.tsx`)                                                            |
+| Skill Evaluations     | ✅     | Full CRUD, backend + frontend (`skill-evaluation-form-sheet.tsx`, `delete-skill-evaluation-button.tsx`)                                            |
+| Reference data        | ✅     | Application sources, interview types, skills — read endpoints + client methods                                                                     |
+| Dashboard (backend)   | ✅     | `get-dashboard-stats` use case; includes weak skills, topic counts, status breakdown, monthly progress (rounds + avg skill score)                  |
+| Dashboard (frontend)  | ✅     | `StatsOverview` renders counts, weakest areas, questions by topic, and progress over time                                                          |
+| Question history      | ✅     | `/questions` page — cross-application list, filterable by topic, links back to the source round                                                    |
+| Learning plan         | ✅     | `/learning` page + `GET /learning-plan` — ranked weak skills with focus hints and related questions                                                |
+| Cursor rules / docs   | ✅     | `.cursor/rules/*.mdc`, `docs/roadmap.md`, Docker Postgres compose + DB docs                                                                        |
+| Quality (first slice) | 🟡     | Vitest use-case tests, GitHub Actions CI, frontend env validation, empty/loading/error states — see P2 deferred items                              |
 
 ## Priority P0 — Core MVP loop completion ✅ Done
 
@@ -116,36 +116,73 @@ CI protect it instead of testing a shell.
       ship publicly.
 - [ ] ⛔ **Error tracking (Sentry)** — once there's real traffic. Non-blocking.
 
-## Priority P4 — Learning loop (recommended next) ⛔ Not started
+## Priority P4 — Learning loop ✅ Done
 
-**Why now:** MVP tracks interviews, questions, and weak skills, but does not
-yet turn that into a concrete study plan — the core value in `docs/vision.md`
+**Why:** MVP tracked interviews, questions, and weak skills, but did not yet
+turn that into a concrete study plan — the core value in `docs/vision.md`
 (“pretvore iskustva sa intervjua u konkretne uvide i **plan učenja**”) and the
 success metric “fokusira pripremu na ono što mu zaista nedostaje.”
 
-- [ ] ⛔ **Learning plan / study focus from weak skills** — derive a focused
-      prep list from aggregated weak `SkillEvaluation`s (and optionally related
-      question topics): what to practice next, ranked by weakness / recency.
-      Likely surfaces on the dashboard and/or a dedicated `/learning` (or
-      similar) page. Follow architecture feature order
-      (contracts → application → infrastructure → composition → presentation →
-      frontend → tests).
+- [x] ✅ **Learning plan / study focus from weak skills** — `GET /learning-plan` + `/learning` page. Top 5 skills with `averageScore < 3`, ranked weakest
+      first, with deterministic Serbian `focusHint`, `lastEvaluatedAt`, and up
+      to 3 related questions matched by case-insensitive `topic` contains skill
+      name. Shared threshold constants in
+      `application/shared/weak-skill-rules.ts` (also used by dashboard). Nav
+      item **Učenje**; dashboard “Najslabije oblasti” links to `/learning`.
+
+Implementation notes:
+
+- Dedicated `learning-plan` vertical (contracts → port → use case → Prisma
+  repo → route), not stuffed into `GET /dashboard/stats`.
+- Topic↔skill matching is heuristic (free-text `Question.topic`, no FK) —
+  acceptable for v1.
+- Plan is computed on read — no new tables/migrations.
 
 Candidate follow-ups for later P4+ slices (add as checked sections when
-starting; do not implement in the first P4 pass unless scoped in):
+starting; do not implement unless scoped in):
 
-- Rejection reason insights (`JobApplication.rejectionReason` already exists
-  in Prisma — may need UI/API exposure + aggregation)
-- Deeper question search (difficulty, company, free-text)
-- Applications list cursor pagination UI (API already supports cursor)
+- [x] ✅ **Dashboard redesign (density + charts + action widgets)** —
+      Compact metric strip (4 counts; catalog skills hidden from hero),
+      status pipeline from existing `statusBreakdown`, learning-plan preview
+      (parallel `GET /learning-plan`), topics bars + weak skills,
+      and `activeApplications` + `upcomingRound` on `GET /dashboard/stats`.
+      Out of scope: rejection-reason insights, shell redesign.
+- [x] ✅ **Dashboard maturity phases** — home switches by data signal:
+      onboarding (0 apps), getting-started checklist (sparse data),
+      analytics layout when `apps≥3` OR `questions≥8` OR `evals≥3`.
+      Preview query: `?preview=empty|one|analytics`.
+- [x] ✅ **Getting-started checklist CTAs** — checklist steps open create
+      sheets in place (application / round / question / skill evaluation)
+      via controlled `hideTrigger` form sheets; empty-state CTA opens
+      `ApplicationFormSheet` directly.
+- [x] ✅ **Demo / preview pages** — `/preview` hub + fixture pages for
+      dashboard phases, applications list, and learning plan (dev nav
+      item **Demo**).
+- [x] ✅ **Structured rejection insights** — rejected applications capture a
+      structured category plus optional detail; `/insights/rejections` shows
+      tenant-scoped category breakdown, categorization coverage, and recent
+      rejection context. Includes additive nullable migration and preview
+      states for empty/filled data.
+- [x] ✅ **Deeper question search** — `/questions` now supports combined
+      free-text, company, topic, and difficulty filters through the full
+      URL-driven frontend → API → Prisma pipeline.
+- [x] ✅ **Applications list cursor pagination UI** — first 12 applications
+      render on the server; “Učitaj još” uses a session-backed Server Action,
+      preserves active filters, deduplicates appended records, and exposes
+      loading/retry/end-of-list states.
+- [x] ✅ **Actionable learning tasks** — persisted tasks turn computed weak-skill
+      recommendations into trackable actions with priority, optional due date,
+      notes, and planned/in-progress/completed lifecycle. `/learning` combines
+      tasks with recommended focuses; active tasks conditionally replace the
+      dashboard learning preview without increasing dashboard density.
 - Deferred P2: Playwright E2E smoke; Prisma repository integration tests
 
 ## How to work this backlog
 
 1. Read this file before planning. Do **not** re-propose ✅ done items.
 2. **Post-MVP rule:** new product features are allowed without clearing every
-   open P2/P3 polish item. Prefer the recommended P4 slice unless the user
-   picks another feature or explicitly asks for deploy/E2E/Sentry next.
+   open P2/P3 polish item. P4 learning plan is done — pick the next slice from
+   open polish or a new P4+ candidate, or whatever the user names.
 3. When adding a brand-new idea, write it into this roadmap (new bullet or
    priority section with a short **Why**) in the same change that plans or
    implements it.

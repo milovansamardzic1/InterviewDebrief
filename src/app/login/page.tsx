@@ -64,6 +64,17 @@ export default function LoginPage() {
     <main className="flex min-h-svh items-center justify-center bg-background p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-base font-semibold text-primary-foreground">
+              I
+            </div>
+            <div>
+              <p className="text-base font-semibold leading-none">Interwjuer</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Interview tracker
+              </p>
+            </div>
+          </div>
           <CardTitle>
             {mode === "login" ? "Sign in" : "Create account"}
           </CardTitle>
@@ -131,7 +142,7 @@ export default function LoginPage() {
             {mode === "login" ? "No account yet?" : "Already registered?"}{" "}
             <button
               type="button"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
+              className="font-medium text-primary underline-offset-4 hover:underline"
               onClick={() => {
                 setError(null);
                 setMode(mode === "login" ? "register" : "login");

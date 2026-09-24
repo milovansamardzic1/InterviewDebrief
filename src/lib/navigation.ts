@@ -1,5 +1,8 @@
 import {
+  BookOpen,
+  ChartNoAxesColumnIncreasing,
   ClipboardList,
+  FlaskConical,
   Home,
   MessageCircleQuestion,
   type LucideIcon,
@@ -27,4 +30,23 @@ export const mainNavItems: NavItem[] = [
     href: "/questions",
     icon: MessageCircleQuestion,
   },
+  {
+    title: "Učenje",
+    href: "/learning",
+    icon: BookOpen,
+  },
+  {
+    title: "Uvidi",
+    href: "/insights/rejections",
+    icon: ChartNoAxesColumnIncreasing,
+  },
+  ...(process.env.NODE_ENV === "development"
+    ? [
+        {
+          title: "Demo",
+          href: "/preview",
+          icon: FlaskConical,
+        } satisfies NavItem,
+      ]
+    : []),
 ];

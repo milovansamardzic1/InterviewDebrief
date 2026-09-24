@@ -17,10 +17,9 @@ into concrete insights and a learning plan. See `docs/vision.md` for full contex
 ## Product phase
 
 MVP loop is live on `master`: auth, applications (+ filters), rounds, questions,
-skill evaluations, dashboard analytics, question history, Vitest + CI. Next
-product focus is the learning loop (P4 in `docs/roadmap.md`) — turning weak
-skills into a concrete study plan. New features are welcome without clearing
-every leftover polish item first.
+skill evaluations, dashboard analytics, question history, learning plan
+(`/learning`), Vitest + CI. New features are welcome without clearing every
+leftover polish item first. See `docs/roadmap.md`.
 
 ## Tech stack
 

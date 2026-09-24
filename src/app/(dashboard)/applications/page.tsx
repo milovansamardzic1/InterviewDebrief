@@ -8,6 +8,8 @@ import { referenceDataApi } from "@/lib/api/reference-data";
 
 export const dynamic = "force-dynamic";
 
+const APPLICATIONS_PAGE_SIZE = 12;
+
 type ApplicationsPageProps = {
   searchParams: Promise<{
     search?: string;
@@ -26,31 +28,32 @@ export default async function ApplicationsPage({
   const hasActiveFilters = Boolean(
     search || status || applicationSourceId || dateFrom || dateTo,
   );
+  const listOptions = {
+    limit: APPLICATIONS_PAGE_SIZE,
+    search,
+    status: status as ApplicationStatus | undefined,
+    applicationSourceId,
+    dateFrom,
+    dateTo,
+  };
 
-  const [{ items: applications }, applicationSources] = await Promise.all([
-    applicationsApi.list({
-      search,
-      status: status as ApplicationStatus | undefined,
-      applicationSourceId,
-      dateFrom,
-      dateTo,
-    }),
+  const [applicationsPage, applicationSources] = await Promise.all([
+    applicationsApi.list(listOptions),
     referenceDataApi.applicationSources(),
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Prijave</h1>
-          <p className="mt-1 text-base text-muted-foreground">
+    <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-x-hidden p-4 sm:gap-6 sm:p-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            Prijave
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             Pregled prijava, statusa i napretka kroz intervju proces.
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            Ukupno: {applications.length}
-          </p>
+        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
           <ApplicationFormSheet
             mode="create"
             applicationSources={applicationSources}
@@ -59,6 +62,7 @@ export default async function ApplicationsPage({
       </header>
 
       <ApplicationFilters
+        key={[search, status, applicationSourceId, dateFrom, dateTo].join("|")}
         applicationSources={applicationSources}
         search={search}
         status={status as ApplicationStatus | undefined}
@@ -68,8 +72,11 @@ export default async function ApplicationsPage({
       />
 
       <ApplicationList
-        applications={applications}
+        key={[search, status, applicationSourceId, dateFrom, dateTo].join("|")}
+        applications={applicationsPage.items}
         hasActiveFilters={hasActiveFilters}
+        nextCursor={applicationsPage.nextCursor}
+        listOptions={listOptions}
       />
     </main>
   );

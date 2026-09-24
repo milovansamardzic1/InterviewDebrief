@@ -14,13 +14,25 @@ export function createQuestionsRoutes(deps: QuestionsRouteDeps) {
     "/",
     zValidator("query", ListQuestionHistoryQuerySchema),
     async (c) => {
-      const { limit, cursor, topic } = c.req.valid("query");
+      const {
+        limit,
+        cursor,
+        topic,
+        search,
+        company,
+        difficulty,
+        answeredOnly,
+      } = c.req.valid("query");
       const userId = c.get("userId");
       const history = await deps.listQuestionHistory.execute({
         userId,
         limit,
         cursor,
         topic,
+        search,
+        company,
+        difficulty,
+        answeredOnly,
       });
       return c.json(history);
     },

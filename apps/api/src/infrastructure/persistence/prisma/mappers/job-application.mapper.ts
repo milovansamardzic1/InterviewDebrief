@@ -125,6 +125,7 @@ export function toApplicationDetailRecord(
     salaryMax: application.salaryMax,
     jobPostingUrl: application.jobPostingUrl,
     jobDescription: application.jobDescription,
+    rejectionCategory: application.rejectionCategory,
     rejectionReason: application.rejectionReason,
     notes: application.notes,
     sourceName: application.applicationSource.name,

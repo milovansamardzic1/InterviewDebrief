@@ -4,6 +4,7 @@ import * as React from "react";
 import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 function Select({
@@ -58,21 +59,29 @@ function SelectContent({
 }: React.ComponentProps<typeof SelectPrimitive.Popup> & {
   sideOffset?: number;
 }) {
+  const isMobile = useIsMobile();
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
         className="z-50 outline-none select-none"
+        side="bottom"
+        align="start"
         sideOffset={sideOffset}
+        // Native-style item alignment only on small screens; desktop stays a
+        // stable dropdown under the trigger. Base UI also disables this mode
+        // automatically when the popup is opened with touch.
+        alignItemWithTrigger={isMobile}
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
           className={cn(
-            "group max-h-[min(var(--available-height),20rem)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-hidden rounded-lg border border-border bg-popover bg-clip-padding text-popover-foreground shadow-lg transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0",
+            "group max-h-[min(var(--available-height),20rem)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-hidden rounded-xl border border-border bg-popover bg-clip-padding text-popover-foreground shadow-md ring-1 ring-foreground/5 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:ring-foreground/10",
             className,
           )}
           {...props}
         >
-          <SelectPrimitive.List className="overflow-y-auto p-1">
+          <SelectPrimitive.List className="max-h-[inherit] overflow-y-auto overscroll-contain p-1.5">
             {children}
           </SelectPrimitive.List>
         </SelectPrimitive.Popup>
@@ -90,7 +99,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2 rounded-md py-1.5 pl-7 pr-2 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-muted data-highlighted:text-foreground",
+        "relative flex w-full cursor-default items-center gap-2 rounded-lg py-2 pl-7 pr-2 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         className,
       )}
       {...props}

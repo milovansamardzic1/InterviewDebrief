@@ -16,6 +16,7 @@ type RoundSeed = {
   completedAt?: string;
   questions?: Array<{
     question: string;
+    myAnswer?: string;
     topic: string;
     difficulty: number;
   }>;
@@ -57,6 +58,8 @@ const demoApplications: ApplicationSeed[] = [
           {
             question:
               "Tell me about a challenging project you owned end-to-end.",
+            myAnswer:
+              "I described a billing service migration that I owned from the technical proposal through production. I emphasized how I reduced risk, coordinated the rollout, and monitored the system after release.",
             topic: "Behavioral",
             difficulty: 2,
           },
@@ -71,11 +74,15 @@ const demoApplications: ApplicationSeed[] = [
         questions: [
           {
             question: "Design a rate limiter API with Redis.",
+            myAnswer:
+              "I would use a token bucket per user and endpoint. The state would live in Redis, with an atomic Lua script updating the available tokens so concurrent requests cannot exceed the limit. Each key would have a TTL, while the API would return 429 and standard rate-limit headers. During a Redis outage, less critical routes could fail open, while expensive or security-sensitive operations would fail closed. At larger scale, I would shard Redis by a hash of the user ID and monitor hot-key metrics.",
             topic: "Backend",
             difficulty: 4,
           },
           {
             question: "How did you handle idempotency in your solution?",
+            myAnswer:
+              "I used an idempotency key and stored the request result in Redis.",
             topic: "System Design",
             difficulty: 3,
           },
@@ -90,11 +97,15 @@ const demoApplications: ApplicationSeed[] = [
         questions: [
           {
             question: "Implement LRU cache with O(1) get and put.",
+            myAnswer:
+              "A hash map provides O(1) access to each node, while a doubly linked list maintains usage order. Every get moves its node to the front. Put updates an existing node or inserts a new one, removing the tail when capacity is exceeded.",
             topic: "Algorithms",
             difficulty: 4,
           },
           {
             question: "Explain ACID properties in distributed transactions.",
+            myAnswer:
+              "Atomicity means a transaction either completes fully or is rolled back. Consistency preserves defined data invariants, isolation controls how much concurrent transactions can observe intermediate state, and durability ensures committed changes survive failures. Across multiple services these guarantees are costly: two-phase commit provides stronger consistency but introduces coordination and availability concerns, while a saga often accepts eventual consistency and uses explicit compensating actions.",
             topic: "Database",
             difficulty: 3,
           },
@@ -114,6 +125,8 @@ const demoApplications: ApplicationSeed[] = [
         questions: [
           {
             question: "Design a payment webhook processing system.",
+            myAnswer:
+              "I would first verify the webhook signature, persist the original event, and return 2xx quickly. An asynchronous worker would process it using the provider event ID as a unique key, with exponential-backoff retries and a dead-letter queue. Processing must be idempotent because the provider may deliver the same event more than once or send events out of order.",
             topic: "System Design",
             difficulty: 5,
           },
@@ -167,12 +180,16 @@ const demoApplications: ApplicationSeed[] = [
           {
             question:
               "Explain the difference between == and === in JavaScript.",
+            myAnswer:
+              "=== compares both type and value without implicit conversion, while == performs type coercion first. I use === in application code unless there is a very deliberate reason to rely on coercion.",
             topic: "JavaScript",
             difficulty: 2,
           },
           {
             question:
               "What is the virtual DOM and when does reconciliation happen?",
+            myAnswer:
+              "The virtual DOM is React's in-memory representation of the UI tree. When state or props change, React creates a new tree and reconciliation compares it with the previous one, using element type and keys to decide what can be preserved. The commit phase then applies only the required changes to the real DOM.",
             topic: "React",
             difficulty: 3,
           },
@@ -567,6 +584,7 @@ async function main() {
                   ? {
                       create: round.questions.map((question) => ({
                         question: question.question,
+                        myAnswer: question.myAnswer,
                         topic: question.topic,
                         difficulty: question.difficulty,
                       })),
@@ -579,6 +597,105 @@ async function main() {
       });
     }),
   );
+
+  const skillByName = new Map(
+    (await prisma.skill.findMany()).map((skill) => [skill.name, skill.id]),
+  );
+
+  const completedRounds = await prisma.interviewRound.findMany({
+    where: {
+      status: InterviewRoundStatus.COMPLETED,
+      jobApplication: { userId: demoUser.id },
+    },
+    orderBy: { completedAt: "asc" },
+    select: { id: true },
+  });
+
+  if (completedRounds.length === 0) {
+    throw new Error("Seed expected completed rounds for skill evaluations");
+  }
+
+  type EvaluationSeed = {
+    roundOffset: number;
+    skillName: string;
+    score: number;
+    notes?: string;
+  };
+
+  // Mix of weak (< 3) and strong skills so dashboard/learning plan have data.
+  const evaluationSeeds: EvaluationSeed[] = [
+    {
+      roundOffset: 0,
+      skillName: "System Design",
+      score: 1,
+      notes: "Struggled with capacity estimates.",
+    },
+    {
+      roundOffset: 1,
+      skillName: "System Design",
+      score: 2,
+      notes: "Trade-offs were shallow.",
+    },
+    { roundOffset: 2, skillName: "System Design", score: 2 },
+    {
+      roundOffset: 3,
+      skillName: "Algorithms",
+      score: 2,
+      notes: "Needed hints on complexity.",
+    },
+    { roundOffset: 4, skillName: "Algorithms", score: 2 },
+    { roundOffset: 5, skillName: "Algorithms", score: 3 },
+    {
+      roundOffset: 1,
+      skillName: "SQL",
+      score: 1,
+      notes: "Weak on indexing and joins.",
+    },
+    { roundOffset: 3, skillName: "SQL", score: 2 },
+    {
+      roundOffset: 0,
+      skillName: "Communication",
+      score: 2,
+      notes: "Answers were unstructured.",
+    },
+    { roundOffset: 2, skillName: "Communication", score: 2 },
+    { roundOffset: 4, skillName: "React", score: 4 },
+    { roundOffset: 5, skillName: "React", score: 5 },
+    { roundOffset: 2, skillName: "TypeScript", score: 4 },
+    { roundOffset: 4, skillName: "Node.js", score: 4 },
+  ];
+
+  const evaluationData = evaluationSeeds.flatMap((evaluation) => {
+    const round =
+      completedRounds[evaluation.roundOffset % completedRounds.length];
+    const skillId = skillByName.get(evaluation.skillName);
+
+    if (!round || !skillId) {
+      return [];
+    }
+
+    return [
+      {
+        interviewRoundId: round.id,
+        skillId,
+        score: evaluation.score,
+        notes: evaluation.notes,
+      },
+    ];
+  });
+
+  // Unique per (round, skill) — keep first occurrence if seed overlaps.
+  const seen = new Set<string>();
+  const uniqueEvaluations = evaluationData.filter((evaluation) => {
+    const key = `${evaluation.interviewRoundId}:${evaluation.skillId}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
+  await prisma.skillEvaluation.createMany({ data: uniqueEvaluations });
 }
 
 main()

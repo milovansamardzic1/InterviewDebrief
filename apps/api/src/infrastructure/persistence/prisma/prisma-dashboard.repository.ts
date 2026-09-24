@@ -4,11 +4,12 @@ import type {
   DashboardRepository,
   GetDashboardStatsOptions,
 } from "../../../application/dashboard/ports/dashboard.repository.js";
+import {
+  WEAK_SKILL_DASHBOARD_LIMIT,
+  WEAK_SKILL_THRESHOLD,
+} from "../../../application/shared/weak-skill-rules.js";
 import type { Logger } from "../../logging/logger.js";
 import { runPrismaOperation } from "./prisma-error.js";
-
-const WEAK_SKILL_THRESHOLD = 3;
-const WEAK_SKILL_LIMIT = 10;
 
 export class PrismaDashboardRepository implements DashboardRepository {
   constructor(
@@ -19,10 +20,14 @@ export class PrismaDashboardRepository implements DashboardRepository {
   async getStats(options: GetDashboardStatsOptions) {
     const applicationWhere = { userId: options.userId };
     const roundWhere = { jobApplication: applicationWhere };
-    const questionWhere = { interviewRound: { jobApplication: applicationWhere } };
+    const questionWhere = {
+      interviewRound: { jobApplication: applicationWhere },
+    };
     const evaluationWhere = {
       interviewRound: { jobApplication: applicationWhere },
     };
+
+    const now = new Date();
 
     const [
       jobApplications,
@@ -35,6 +40,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
       skillScoreGroups,
       completedRounds,
       completedRoundSkillScores,
+      activeApplicationRows,
+      upcomingRoundRow,
     ] = await runPrismaOperation("dashboard.getStats", this.logger, () =>
       Promise.all([
         this.db.jobApplication.count({ where: applicationWhere }),
@@ -83,6 +90,39 @@ export class PrismaDashboardRepository implements DashboardRepository {
             interviewRound: { select: { completedAt: true } },
           },
         }),
+        this.db.jobApplication.findMany({
+          where: {
+            ...applicationWhere,
+            applicationStatus: {
+              in: ["APPLIED", "SCREENING", "INTERVIEWING"],
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            company: true,
+            position: true,
+            applicationStatus: true,
+          },
+        }),
+        this.db.interviewRound.findFirst({
+          where: {
+            ...roundWhere,
+            status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+            scheduledAt: { gte: now },
+          },
+          orderBy: { scheduledAt: "asc" },
+          select: {
+            id: true,
+            scheduledAt: true,
+            jobApplicationId: true,
+            interviewType: { select: { name: true } },
+            jobApplication: {
+              select: { company: true, position: true },
+            },
+          },
+        }),
       ]),
     );
 
@@ -120,7 +160,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
           item !== null && item.averageScore < WEAK_SKILL_THRESHOLD,
       )
       .sort((a, b) => a.averageScore - b.averageScore)
-      .slice(0, WEAK_SKILL_LIMIT);
+      .slice(0, WEAK_SKILL_DASHBOARD_LIMIT);
 
     const questionsByTopic = topicGroups
       .filter((group) => group.topic !== null)
@@ -185,6 +225,25 @@ export class PrismaDashboardRepository implements DashboardRepository {
       }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
+    const activeApplications = activeApplicationRows.map((row) => ({
+      id: row.id,
+      company: row.company,
+      position: row.position,
+      applicationStatus: row.applicationStatus,
+    }));
+
+    const upcomingRound =
+      upcomingRoundRow && upcomingRoundRow.scheduledAt
+        ? {
+            id: upcomingRoundRow.id,
+            roundType: upcomingRoundRow.interviewType.name,
+            scheduledAt: upcomingRoundRow.scheduledAt,
+            company: upcomingRoundRow.jobApplication.company,
+            position: upcomingRoundRow.jobApplication.position,
+            applicationId: upcomingRoundRow.jobApplicationId,
+          }
+        : null;
+
     return {
       jobApplications,
       interviewRounds,
@@ -195,6 +254,8 @@ export class PrismaDashboardRepository implements DashboardRepository {
       questionsByTopic,
       statusBreakdown,
       progressOverTime,
+      activeApplications,
+      upcomingRound,
     };
   }
 }

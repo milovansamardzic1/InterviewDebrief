@@ -12,6 +12,7 @@ import {
   formatApplicationDate,
   formatSalaryRange,
 } from "@/features/job-applications/lib/format";
+import { getRejectionCategoryLabel } from "@/features/rejection-insights/lib/rejection-categories";
 import type {
   ApplicationDetail,
   ApplicationListRound,
@@ -113,14 +114,21 @@ export function ApplicationDetailView({
         </div>
       </header>
 
-      {application.rejectionReason ? (
+      {application.rejectionCategory || application.rejectionReason ? (
         <section className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
           <h2 className="text-sm font-medium text-destructive">
             Razlog odbijanja
           </h2>
-          <p className="mt-1 text-sm whitespace-pre-wrap text-foreground/90">
-            {application.rejectionReason}
-          </p>
+          {application.rejectionCategory ? (
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {getRejectionCategoryLabel(application.rejectionCategory)}
+            </p>
+          ) : null}
+          {application.rejectionReason ? (
+            <p className="mt-1 text-sm whitespace-pre-wrap text-foreground/90">
+              {application.rejectionReason}
+            </p>
+          ) : null}
         </section>
       ) : null}
 

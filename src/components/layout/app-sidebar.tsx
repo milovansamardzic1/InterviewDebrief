@@ -38,17 +38,19 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="flex h-14 shrink-0 flex-row items-center border-b border-border px-4 py-0">
+      <SidebarHeader className="flex h-14 shrink-0 flex-row items-center border-b border-sidebar-border px-4 py-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
         <Link
           href="/"
           className="flex min-w-0 items-center gap-3 group-data-[collapsible=icon]:justify-center"
         >
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-base font-semibold text-primary-foreground">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-base font-semibold text-sidebar-primary-foreground">
             I
           </div>
           <div className="grid min-w-0 flex-1 leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-base font-semibold">Interwjuer</span>
-            <span className="truncate text-sm text-muted-foreground">
+            <span className="truncate text-base font-semibold text-sidebar-foreground">
+              Interwjuer
+            </span>
+            <span className="truncate text-sm text-sidebar-foreground/65">
               Interview tracker
             </span>
           </div>
@@ -65,10 +67,12 @@ export function AppSidebar() {
                     isActive={isActivePath(pathname, item.href)}
                     render={<Link href={item.href} />}
                     tooltip={item.title}
-                    className="h-10 text-base [&_svg]:size-5"
+                    className="h-10 text-base group-data-[collapsible=icon]:justify-center! group-data-[collapsible=icon]:p-0! [&_svg]:size-5"
                   >
                     <item.icon strokeWidth={2} />
-                    <span>{item.title}</span>
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {item.title}
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -77,15 +81,17 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-2">
+      <SidebarFooter className="border-t border-sidebar-border p-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className="h-10 text-base [&_svg]:size-5"
+              className="h-10 text-base group-data-[collapsible=icon]:justify-center! group-data-[collapsible=icon]:p-0! [&_svg]:size-5"
             >
               <LogOut strokeWidth={2} />
-              <span>Sign out</span>
+              <span className="group-data-[collapsible=icon]:hidden">
+                Sign out
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

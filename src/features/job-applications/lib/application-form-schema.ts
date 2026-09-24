@@ -5,6 +5,7 @@ import type {
   CreateApplicationRequest,
   UpdateApplicationRequest,
 } from "@interwjuer/contracts";
+import { rejectionCategoryValues } from "@/features/rejection-insights/lib/rejection-categories";
 
 const APPLICATION_STATUS_VALUES = [
   "APPLIED",
@@ -74,6 +75,7 @@ export const applicationFormSchema = z
       .max(10000, "Maksimalno 10000 karaktera.")
       .optional(),
     applicationStatus: z.enum(APPLICATION_STATUS_VALUES),
+    rejectionCategory: z.enum(rejectionCategoryValues).optional(),
     rejectionReason: z
       .string()
       .max(10000, "Maksimalno 10000 karaktera.")
@@ -89,7 +91,16 @@ export const applicationFormSchema = z
       message: "Minimalna plata mora biti manja ili jednaka maksimalnoj.",
       path: ["salaryMax"],
     },
-  );
+  )
+  .superRefine((values, context) => {
+    if (values.applicationStatus === "REJECTED" && !values.rejectionCategory) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Izaberi kategoriju odbijanja.",
+        path: ["rejectionCategory"],
+      });
+    }
+  });
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 
@@ -105,6 +116,7 @@ export function buildEmptyApplicationFormValues(): ApplicationFormValues {
     jobPostingUrl: "",
     jobDescription: "",
     applicationStatus: "APPLIED",
+    rejectionCategory: undefined,
     rejectionReason: "",
     notes: "",
   };
@@ -131,6 +143,7 @@ export function applicationDetailToFormValues(
     jobPostingUrl: application.jobPostingUrl ?? "",
     jobDescription: application.jobDescription ?? "",
     applicationStatus: application.applicationStatus,
+    rejectionCategory: application.rejectionCategory ?? undefined,
     rejectionReason: application.rejectionReason ?? "",
     notes: application.notes ?? "",
   };
@@ -154,9 +167,14 @@ export function toApplicationRequestPayload(
       ? values.jobDescription.trim()
       : null,
     applicationStatus: values.applicationStatus,
-    rejectionReason: values.rejectionReason?.trim()
-      ? values.rejectionReason.trim()
-      : null,
+    rejectionCategory:
+      values.applicationStatus === "REJECTED"
+        ? (values.rejectionCategory ?? null)
+        : null,
+    rejectionReason:
+      values.applicationStatus === "REJECTED" && values.rejectionReason?.trim()
+        ? values.rejectionReason.trim()
+        : null,
     notes: values.notes?.trim() ? values.notes.trim() : null,
   };
 }

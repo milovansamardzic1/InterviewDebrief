@@ -4,12 +4,11 @@ import { describe, expect, it } from "vitest";
 import { NotFoundError } from "../../shared/errors/app-error.js";
 import type {
   CreateApplicationData,
-  FindApplicationByIdOptions,
-  FindManyApplicationsOptions,
   JobApplicationsRepository,
   UpdateApplicationData,
 } from "../ports/job-applications.repository.js";
 import {
+  CreateApplicationUseCase,
   DeleteApplicationUseCase,
   UpdateApplicationUseCase,
 } from "./mutate-application.use-cases.js";
@@ -31,6 +30,7 @@ function toDetail(
     salaryMax: null,
     jobPostingUrl: null,
     jobDescription: null,
+    rejectionCategory: null,
     rejectionReason: null,
     notes: null,
     sourceName: "LinkedIn",
@@ -42,11 +42,11 @@ function toDetail(
 class FakeJobApplicationsRepository implements JobApplicationsRepository {
   applications = new Map<string, ApplicationDetail>();
 
-  async findManyForList(_options: FindManyApplicationsOptions) {
+  async findManyForList() {
     return { items: [], nextCursor: null };
   }
 
-  async findDetailById(id: string, _options: FindApplicationByIdOptions) {
+  async findDetailById(id: string) {
     return this.applications.get(id) ?? null;
   }
 
@@ -58,6 +58,9 @@ class FakeJobApplicationsRepository implements JobApplicationsRepository {
     const detail = toDetail({
       company: data.company,
       position: data.position,
+      applicationStatus: data.applicationStatus ?? "APPLIED",
+      rejectionCategory: data.rejectionCategory ?? null,
+      rejectionReason: data.rejectionReason ?? null,
     });
     this.applications.set(detail.id, detail);
     return detail;
@@ -75,6 +78,12 @@ class FakeJobApplicationsRepository implements JobApplicationsRepository {
     const updated: ApplicationDetail = {
       ...existing,
       ...(data.company !== undefined ? { company: data.company } : {}),
+      ...(data.applicationStatus !== undefined
+        ? { applicationStatus: data.applicationStatus }
+        : {}),
+      ...(data.rejectionCategory !== undefined
+        ? { rejectionCategory: data.rejectionCategory }
+        : {}),
       ...(data.rejectionReason !== undefined
         ? { rejectionReason: data.rejectionReason }
         : {}),
@@ -87,6 +96,30 @@ class FakeJobApplicationsRepository implements JobApplicationsRepository {
     return this.applications.delete(id);
   }
 }
+
+describe("CreateApplicationUseCase", () => {
+  it("captures structured rejection data on a rejected application", async () => {
+    const repository = new FakeJobApplicationsRepository();
+    const useCase = new CreateApplicationUseCase(repository);
+
+    const result = await useCase.execute({
+      userId: USER_ID,
+      company: "Acme",
+      position: "Engineer",
+      applicationSourceId: "source-1",
+      applicationDate: new Date("2026-08-01"),
+      applicationStatus: "REJECTED",
+      rejectionCategory: "SYSTEM_DESIGN",
+      rejectionReason: "Missing trade-offs",
+    });
+
+    expect(result).toMatchObject({
+      applicationStatus: "REJECTED",
+      rejectionCategory: "SYSTEM_DESIGN",
+      rejectionReason: "Missing trade-offs",
+    });
+  });
+});
 
 describe("UpdateApplicationUseCase", () => {
   it("throws NotFoundError when the application does not exist for the user", async () => {
@@ -110,6 +143,31 @@ describe("UpdateApplicationUseCase", () => {
     });
 
     expect(result.company).toBe("New Co");
+  });
+
+  it("clears rejection data when an application leaves rejected status", async () => {
+    const repository = new FakeJobApplicationsRepository();
+    repository.applications.set(
+      APPLICATION_ID,
+      toDetail({
+        applicationStatus: "REJECTED",
+        rejectionCategory: "SYSTEM_DESIGN",
+        rejectionReason: "Missing trade-offs",
+      }),
+    );
+    const useCase = new UpdateApplicationUseCase(repository);
+
+    const result = await useCase.execute({
+      id: APPLICATION_ID,
+      userId: USER_ID,
+      applicationStatus: "INTERVIEWING",
+    });
+
+    expect(result).toMatchObject({
+      applicationStatus: "INTERVIEWING",
+      rejectionCategory: null,
+      rejectionReason: null,
+    });
   });
 });
 

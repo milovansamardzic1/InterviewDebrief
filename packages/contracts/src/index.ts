@@ -1,4 +1,10 @@
-export type { ApplicationStatus, InterviewRoundStatus } from "./enums.js";
+export type {
+  ApplicationStatus,
+  InterviewRoundStatus,
+  LearningTaskPriority,
+  LearningTaskStatus,
+  RejectionCategory,
+} from "./enums.js";
 
 export type {
   ApplicationDetail,
@@ -41,7 +47,9 @@ export type {
 } from "./reference-data.js";
 
 export type {
+  DashboardActiveApplication,
   DashboardStats,
+  DashboardUpcomingRound,
   MonthlyProgress,
   StatusCount,
   TopicCount,
@@ -54,6 +62,25 @@ export type {
   QuestionHistoryItem,
   QuestionHistoryResponse,
 } from "./question-history.js";
+
+export type {
+  LearningPlanItem,
+  LearningPlanRelatedQuestion,
+  LearningPlanResponse,
+} from "./learning-plan.js";
+
+export type {
+  CreateLearningTaskRequest,
+  LearningTask,
+  LearningTaskListResponse,
+  UpdateLearningTaskRequest,
+} from "./learning-tasks.js";
+
+export type {
+  RecentRejection,
+  RejectionCategoryCount,
+  RejectionInsightsResponse,
+} from "./rejection-insights.js";
 
 export type {
   AuthResponse,

@@ -12,6 +12,17 @@ const ApplicationStatusSchema = z.enum([
   "WITHDRAWN",
 ]);
 
+const RejectionCategorySchema = z.enum([
+  "TECHNICAL_SKILLS",
+  "SYSTEM_DESIGN",
+  "PROBLEM_SOLVING",
+  "COMMUNICATION",
+  "EXPERIENCE_FIT",
+  "COMPENSATION",
+  "POSITION_CLOSED",
+  "OTHER",
+]);
+
 const InterviewRoundStatusSchema = z.enum([
   "SCHEDULED",
   "IN_PROGRESS",
@@ -55,13 +66,13 @@ export const CreateApplicationBodySchema = z.object({
   jobPostingUrl: z.string().url().nullable().optional(),
   jobDescription: z.string().max(10000).nullable().optional(),
   applicationStatus: ApplicationStatusSchema.optional(),
+  rejectionCategory: RejectionCategorySchema.nullable().optional(),
+  rejectionReason: z.string().max(10000).nullable().optional(),
   notes: z.string().max(10000).nullable().optional(),
 });
 
 export const UpdateApplicationBodySchema =
-  CreateApplicationBodySchema.partial().extend({
-    rejectionReason: z.string().max(10000).nullable().optional(),
-  });
+  CreateApplicationBodySchema.partial();
 
 export const ApplicationRoundParamsSchema = z.object({
   applicationId: cuid,

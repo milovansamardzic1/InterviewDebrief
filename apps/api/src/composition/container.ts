@@ -9,6 +9,12 @@ import {
   DeleteInterviewRoundUseCase,
   UpdateInterviewRoundUseCase,
 } from "../application/interview-rounds/use-cases/mutate-interview-round.use-cases.js";
+import { ListLearningTasksUseCase } from "../application/learning-tasks/use-cases/list-learning-tasks.use-case.js";
+import {
+  CreateLearningTaskUseCase,
+  DeleteLearningTaskUseCase,
+  UpdateLearningTaskUseCase,
+} from "../application/learning-tasks/use-cases/mutate-learning-task.use-cases.js";
 import { GetApplicationByIdUseCase } from "../application/job-applications/use-cases/get-application-by-id.use-case.js";
 import { ListApplicationsUseCase } from "../application/job-applications/use-cases/list-applications.use-case.js";
 import {
@@ -17,11 +23,13 @@ import {
   UpdateApplicationUseCase,
 } from "../application/job-applications/use-cases/mutate-application.use-cases.js";
 import { ListQuestionHistoryUseCase } from "../application/questions/use-cases/list-question-history.use-case.js";
+import { GetRejectionInsightsUseCase } from "../application/rejection-insights/use-cases/get-rejection-insights.use-case.js";
 import {
   CreateQuestionUseCase,
   DeleteQuestionUseCase,
   UpdateQuestionUseCase,
 } from "../application/questions/use-cases/mutate-question.use-cases.js";
+import { GetLearningPlanUseCase } from "../application/learning-plan/use-cases/get-learning-plan.use-case.js";
 import {
   ListApplicationSourcesUseCase,
   ListInterviewTypesUseCase,
@@ -39,7 +47,10 @@ import { logger, type Logger } from "../infrastructure/logging/logger.js";
 import { PrismaDashboardRepository } from "../infrastructure/persistence/prisma/prisma-dashboard.repository.js";
 import { PrismaInterviewRoundsRepository } from "../infrastructure/persistence/prisma/prisma-interview-rounds.repository.js";
 import { PrismaJobApplicationsRepository } from "../infrastructure/persistence/prisma/prisma-job-applications.repository.js";
+import { PrismaLearningPlanRepository } from "../infrastructure/persistence/prisma/prisma-learning-plan.repository.js";
+import { PrismaLearningTasksRepository } from "../infrastructure/persistence/prisma/prisma-learning-tasks.repository.js";
 import { PrismaQuestionsRepository } from "../infrastructure/persistence/prisma/prisma-questions.repository.js";
+import { PrismaRejectionInsightsRepository } from "../infrastructure/persistence/prisma/prisma-rejection-insights.repository.js";
 import { PrismaReferenceDataRepository } from "../infrastructure/persistence/prisma/prisma-reference-data.repository.js";
 import { PrismaSkillEvaluationsRepository } from "../infrastructure/persistence/prisma/prisma-skill-evaluations.repository.js";
 import { PrismaUserRepository } from "../infrastructure/persistence/prisma/prisma-user.repository.js";
@@ -63,6 +74,12 @@ export type Container = {
   updateQuestion: UpdateQuestionUseCase;
   deleteQuestion: DeleteQuestionUseCase;
   listQuestionHistory: ListQuestionHistoryUseCase;
+  getLearningPlan: GetLearningPlanUseCase;
+  listLearningTasks: ListLearningTasksUseCase;
+  createLearningTask: CreateLearningTaskUseCase;
+  updateLearningTask: UpdateLearningTaskUseCase;
+  deleteLearningTask: DeleteLearningTaskUseCase;
+  getRejectionInsights: GetRejectionInsightsUseCase;
   createSkillEvaluation: CreateSkillEvaluationUseCase;
   updateSkillEvaluation: UpdateSkillEvaluationUseCase;
   deleteSkillEvaluation: DeleteSkillEvaluationUseCase;
@@ -94,6 +111,18 @@ export function createContainer(): Container {
     logger,
   );
   const dashboardRepository = new PrismaDashboardRepository(prisma, logger);
+  const learningPlanRepository = new PrismaLearningPlanRepository(
+    prisma,
+    logger,
+  );
+  const learningTasksRepository = new PrismaLearningTasksRepository(
+    prisma,
+    logger,
+  );
+  const rejectionInsightsRepository = new PrismaRejectionInsightsRepository(
+    prisma,
+    logger,
+  );
 
   return {
     logger,
@@ -122,6 +151,14 @@ export function createContainer(): Container {
     updateQuestion: new UpdateQuestionUseCase(questionsRepository),
     deleteQuestion: new DeleteQuestionUseCase(questionsRepository),
     listQuestionHistory: new ListQuestionHistoryUseCase(questionsRepository),
+    getLearningPlan: new GetLearningPlanUseCase(learningPlanRepository),
+    listLearningTasks: new ListLearningTasksUseCase(learningTasksRepository),
+    createLearningTask: new CreateLearningTaskUseCase(learningTasksRepository),
+    updateLearningTask: new UpdateLearningTaskUseCase(learningTasksRepository),
+    deleteLearningTask: new DeleteLearningTaskUseCase(learningTasksRepository),
+    getRejectionInsights: new GetRejectionInsightsUseCase(
+      rejectionInsightsRepository,
+    ),
     createSkillEvaluation: new CreateSkillEvaluationUseCase(
       skillEvaluationsRepository,
     ),

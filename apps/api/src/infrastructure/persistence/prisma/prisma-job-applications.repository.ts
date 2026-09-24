@@ -143,6 +143,8 @@ export class PrismaJobApplicationsRepository implements JobApplicationsRepositor
             jobPostingUrl: data.jobPostingUrl ?? null,
             jobDescription: data.jobDescription ?? null,
             applicationStatus: data.applicationStatus ?? "APPLIED",
+            rejectionCategory: data.rejectionCategory ?? null,
+            rejectionReason: data.rejectionReason ?? null,
             notes: data.notes ?? null,
           },
           ...detailArgs,
@@ -193,6 +195,9 @@ export class PrismaJobApplicationsRepository implements JobApplicationsRepositor
               : {}),
             ...(data.applicationStatus !== undefined
               ? { applicationStatus: data.applicationStatus }
+              : {}),
+            ...(data.rejectionCategory !== undefined
+              ? { rejectionCategory: data.rejectionCategory }
               : {}),
             ...(data.rejectionReason !== undefined
               ? { rejectionReason: data.rejectionReason }

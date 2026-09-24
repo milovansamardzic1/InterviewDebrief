@@ -1,4 +1,7 @@
-import type { DashboardStats } from "@interwjuer/contracts";
+import type {
+  ApplicationStatus,
+  DashboardStats,
+} from "@interwjuer/contracts";
 
 import type { DashboardRepository } from "../ports/dashboard.repository.js";
 
@@ -18,6 +21,22 @@ export class GetDashboardStatsUseCase {
       questionsByTopic: stats.questionsByTopic,
       statusBreakdown: stats.statusBreakdown,
       progressOverTime: stats.progressOverTime,
+      activeApplications: stats.activeApplications.map((application) => ({
+        id: application.id,
+        company: application.company,
+        position: application.position,
+        applicationStatus: application.applicationStatus as ApplicationStatus,
+      })),
+      upcomingRound: stats.upcomingRound
+        ? {
+            id: stats.upcomingRound.id,
+            roundType: stats.upcomingRound.roundType,
+            scheduledAt: stats.upcomingRound.scheduledAt.toISOString(),
+            company: stats.upcomingRound.company,
+            position: stats.upcomingRound.position,
+            applicationId: stats.upcomingRound.applicationId,
+          }
+        : null,
     };
   }
 }

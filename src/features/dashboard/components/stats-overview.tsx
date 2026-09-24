@@ -1,115 +1,81 @@
-import type { DashboardStats } from "@interwjuer/contracts";
-import { ClipboardList } from "lucide-react";
-import Link from "next/link";
+import type {
+  DashboardStats,
+  LearningPlanItem,
+  LearningTask,
+} from "@interwjuer/contracts";
 
-import { Button } from "@/components/ui/button";
-import { ProgressOverTime } from "@/features/dashboard/components/progress-over-time";
+import { ActiveAndUpcoming } from "@/features/dashboard/components/active-and-upcoming";
+import { DashboardEmptyState } from "@/features/dashboard/components/dashboard-empty-state";
+import { DashboardGettingStarted } from "@/features/dashboard/components/dashboard-getting-started";
+import { LearningPreview } from "@/features/dashboard/components/learning-preview";
+import { LearningTasksPreview } from "@/features/dashboard/components/learning-tasks-preview";
+import { MetricStrip } from "@/features/dashboard/components/metric-strip";
+import { QuestionsByTopic } from "@/features/dashboard/components/questions-by-topic";
+import { StatusPipeline } from "@/features/dashboard/components/status-pipeline";
+import { WeakSkillsPreview } from "@/features/dashboard/components/weak-skills-preview";
+import { resolveDashboardPhase } from "@/features/dashboard/lib/dashboard-phase";
+import type { GettingStartedActionContext } from "@/features/dashboard/lib/getting-started-actions";
 
 type StatsOverviewProps = {
   stats: DashboardStats;
+  learningPlanItems: LearningPlanItem[];
+  learningTasks: LearningTask[];
+  actionContext: GettingStartedActionContext | null;
 };
 
-const countItems: Array<{
-  key: keyof Pick<
-    DashboardStats,
-    | "jobApplications"
-    | "interviewRounds"
-    | "questions"
-    | "skillEvaluations"
-    | "skills"
-  >;
-  label: string;
-}> = [
-  { key: "jobApplications", label: "Prijave" },
-  { key: "interviewRounds", label: "Intervju runde" },
-  { key: "questions", label: "Pitanja" },
-  { key: "skillEvaluations", label: "Skill evaluacije" },
-  { key: "skills", label: "Skillovi (katalog)" },
-];
+export function StatsOverview({
+  stats,
+  learningPlanItems,
+  learningTasks,
+  actionContext,
+}: StatsOverviewProps) {
+  const phase = resolveDashboardPhase(stats);
 
-export function StatsOverview({ stats }: StatsOverviewProps) {
-  if (stats.jobApplications === 0) {
+  if (phase === "onboarding") {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center">
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-          <ClipboardList
-            className="size-6 text-muted-foreground"
-            strokeWidth={2}
-          />
-        </div>
-        <h2 className="text-lg font-medium">Još nemaš nijednu prijavu</h2>
-        <p className="mt-1 max-w-sm text-base text-muted-foreground">
-          Dodaj prvu prijavu da bi počeo da pratiš status, intervju runde i
-          napredak kroz proces.
-        </p>
-        <Button className="mt-6" render={<Link href="/applications" />}>
-          Dodaj prijavu
-        </Button>
-      </div>
+      <DashboardEmptyState
+        applicationSources={actionContext?.applicationSources ?? []}
+      />
+    );
+  }
+
+  if (phase === "getting_started") {
+    return (
+      <DashboardGettingStarted stats={stats} actionContext={actionContext} />
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {countItems.map(({ key, label }) => (
-          <article
-            key={key}
-            className="rounded-lg border border-border bg-card p-5 text-card-foreground"
-          >
-            <p className="text-base text-muted-foreground">{label}</p>
-            <p className="mt-2 text-4xl font-semibold tracking-tight">
-              {stats[key]}
-            </p>
-          </article>
-        ))}
-      </section>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 lg:gap-3">
+      <div className="shrink-0">
+        <MetricStrip
+          jobApplications={stats.jobApplications}
+          interviewRounds={stats.interviewRounds}
+          questions={stats.questions}
+          skillEvaluations={stats.skillEvaluations}
+        />
+      </div>
 
-      {stats.weakSkills.length > 0 ? (
-        <section className="rounded-lg border border-border bg-card p-5">
-          <h2 className="text-lg font-semibold">Najslabije oblasti</h2>
-          <ul className="mt-4 space-y-2">
-            {stats.weakSkills.map((skill) => (
-              <li
-                key={skill.skillId}
-                className="flex items-center justify-between text-sm"
-              >
-                <span>
-                  {skill.skillName}
-                  {skill.skillCategory ? (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      · {skill.skillCategory}
-                    </span>
-                  ) : null}
-                </span>
-                <span className="font-medium">
-                  {skill.averageScore}/5 ({skill.evaluationCount})
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <div className="grid min-h-0 min-w-0 shrink gap-2.5 lg:grid-cols-2 lg:gap-3 lg:overflow-hidden">
+        <StatusPipeline breakdown={stats.statusBreakdown} />
+        <ActiveAndUpcoming
+          activeApplications={stats.activeApplications}
+          upcomingRound={stats.upcomingRound}
+        />
+      </div>
 
-      {stats.questionsByTopic.length > 0 ? (
-        <section className="rounded-lg border border-border bg-card p-5">
-          <h2 className="text-lg font-semibold">Pitanja po temi</h2>
-          <ul className="mt-4 space-y-2">
-            {stats.questionsByTopic.slice(0, 8).map((topic) => (
-              <li
-                key={topic.topic}
-                className="flex items-center justify-between text-sm"
-              >
-                <span>{topic.topic}</span>
-                <span className="font-medium">{topic.count}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <div className="min-h-0 shrink">
+        {learningTasks.length > 0 ? (
+          <LearningTasksPreview tasks={learningTasks} />
+        ) : (
+          <LearningPreview items={learningPlanItems} />
+        )}
+      </div>
 
-      <ProgressOverTime progress={stats.progressOverTime} />
+      <div className="grid min-h-0 min-w-0 flex-1 gap-2.5 lg:grid-cols-2 lg:gap-3 lg:overflow-hidden">
+        <QuestionsByTopic topics={stats.questionsByTopic} />
+        <WeakSkillsPreview weakSkills={stats.weakSkills} />
+      </div>
     </div>
   );
 }

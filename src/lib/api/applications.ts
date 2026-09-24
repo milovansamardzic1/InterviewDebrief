@@ -18,6 +18,7 @@ import type {
 import { api, isNotFound } from "@/lib/api/client";
 
 export type ListApplicationsOptions = {
+  limit?: number;
   cursor?: string;
   search?: string;
   status?: ApplicationStatus;
@@ -30,6 +31,7 @@ export const applicationsApi = {
   list(options: ListApplicationsOptions = {}) {
     const params = new URLSearchParams();
 
+    if (options.limit) params.set("limit", String(options.limit));
     if (options.cursor) params.set("cursor", options.cursor);
     if (options.search) params.set("search", options.search);
     if (options.status) params.set("status", options.status);

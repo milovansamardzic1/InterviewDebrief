@@ -9,7 +9,10 @@ import {
   createPublicAuthRoutes,
 } from "../presentation/routes/auth.js";
 import { createDashboardRoutes } from "../presentation/routes/dashboard.js";
+import { createLearningPlanRoutes } from "../presentation/routes/learning-plan.js";
+import { createLearningTasksRoutes } from "../presentation/routes/learning-tasks.js";
 import { createQuestionsRoutes } from "../presentation/routes/questions.js";
+import { createRejectionInsightsRoutes } from "../presentation/routes/rejection-insights.js";
 import { createReferenceDataRoutes } from "../presentation/routes/reference-data.js";
 import type { AppVariables } from "../presentation/context.js";
 import { handleError } from "../presentation/lib/handle-error.js";
@@ -17,21 +20,37 @@ import { createAuthMiddleware } from "../presentation/middleware/auth.js";
 import { createRequestLogger } from "../presentation/middleware/request-logger.js";
 import type { Container } from "./container.js";
 
-function getAllowedOrigin() {
+function getAllowedOrigins() {
   const env = loadEnv();
-  return env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  const configured = env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  const origins = new Set([
+    "http://localhost:3000",
+    "http://192.168.0.10:3000",
+    ...(configured ? [configured] : []),
+  ]);
+
+  return [...origins];
 }
 
 export function createApp(container: Container) {
   const app = new Hono<{ Variables: AppVariables }>();
+  const allowedOrigins = getAllowedOrigins();
 
   app.use("*", createRequestLogger(container.logger));
   app.use("*", secureHeaders());
   app.use(
     "*",
     cors({
-      origin: getAllowedOrigin(),
-      allowMethods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      origin: allowedOrigins,
+      allowMethods: [
+        "GET",
+        "HEAD",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+      ],
       allowHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     }),
@@ -46,6 +65,12 @@ export function createApp(container: Container) {
   protectedApi.route("/applications", createApplicationsRoutes(container));
   protectedApi.route("/dashboard", createDashboardRoutes(container));
   protectedApi.route("/questions", createQuestionsRoutes(container));
+  protectedApi.route("/learning-plan", createLearningPlanRoutes(container));
+  protectedApi.route("/learning-tasks", createLearningTasksRoutes(container));
+  protectedApi.route(
+    "/rejection-insights",
+    createRejectionInsightsRoutes(container),
+  );
   protectedApi.route("/", createReferenceDataRoutes(container));
   app.route("/", protectedApi);
 

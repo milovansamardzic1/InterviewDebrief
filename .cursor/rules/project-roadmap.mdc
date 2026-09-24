@@ -14,10 +14,9 @@ done and merged to `master`).
 - **Post-MVP:** do not block new product features on leftover polish (deploy
   docs, Sentry, deferred Playwright / Prisma integration tests) unless the
   user explicitly asks to ship or harden first.
-- Default recommended next product work is **P4 — Learning plan / study focus
-  from weak skills** when the user asks "what's next" without a specific
-  feature. If they name a different feature, plan that slice and add it to
-  the roadmap in the same change.
+- Default recommended next when the user asks "what's next" without a specific
+  feature: open P3 polish (deploy docs) or the next unchecked P4+ candidate in
+  `docs/roadmap.md`. P4 learning plan is done — do not re-propose it.
 - Prefer one focused, shippable slice per plan. When inventing features,
   ground them in `docs/vision.md` success metrics.
 - When a roadmap item is completed, update its status in `docs/roadmap.md` in

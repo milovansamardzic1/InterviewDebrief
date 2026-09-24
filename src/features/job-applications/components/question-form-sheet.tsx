@@ -28,8 +28,9 @@ import {
   toQuestionRequestPayload,
   type QuestionFormValues,
 } from "@/features/job-applications/lib/question-form-schema";
+import { useControllableOpen } from "@/features/job-applications/lib/use-controllable-open";
 
-type QuestionFormSheetProps =
+type QuestionFormSheetProps = (
   | {
       mode: "create";
       applicationId: string;
@@ -40,11 +41,19 @@ type QuestionFormSheetProps =
       applicationId: string;
       roundId: string;
       question: ApplicationDetailQuestion;
-    };
+    }
+) & {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+};
 
 export function QuestionFormSheet(props: QuestionFormSheetProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useControllableOpen({
+    open: props.open,
+    onOpenChange: props.onOpenChange,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEdit = props.mode === "edit";
@@ -86,27 +95,29 @@ export function QuestionFormSheet(props: QuestionFormSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={
-          isEdit ? (
-            <Button variant="ghost" size="sm" />
+      {props.hideTrigger ? null : (
+        <SheetTrigger
+          render={
+            isEdit ? (
+              <Button variant="ghost" size="sm" />
+            ) : (
+              <Button variant="outline" size="sm" />
+            )
+          }
+        >
+          {isEdit ? (
+            <>
+              <Pencil />
+              Izmeni
+            </>
           ) : (
-            <Button variant="outline" size="sm" />
-          )
-        }
-      >
-        {isEdit ? (
-          <>
-            <Pencil />
-            Izmeni
-          </>
-        ) : (
-          <>
-            <Plus />
-            Dodaj pitanje
-          </>
-        )}
-      </SheetTrigger>
+            <>
+              <Plus />
+              Dodaj pitanje
+            </>
+          )}
+        </SheetTrigger>
+      )}
 
       <SheetContent className="flex w-full flex-col gap-0 sm:max-w-lg">
         <SheetHeader>

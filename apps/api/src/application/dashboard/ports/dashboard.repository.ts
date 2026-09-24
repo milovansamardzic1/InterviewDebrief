@@ -22,6 +22,22 @@ export type MonthlyProgressRecord = {
   averageSkillScore: number | null;
 };
 
+export type ActiveApplicationRecord = {
+  id: string;
+  company: string;
+  position: string;
+  applicationStatus: string;
+};
+
+export type UpcomingRoundRecord = {
+  id: string;
+  roundType: string;
+  scheduledAt: Date;
+  company: string;
+  position: string;
+  applicationId: string;
+};
+
 export type DashboardStatsRecord = {
   jobApplications: number;
   interviewRounds: number;
@@ -32,6 +48,8 @@ export type DashboardStatsRecord = {
   questionsByTopic: TopicCountRecord[];
   statusBreakdown: StatusCountRecord[];
   progressOverTime: MonthlyProgressRecord[];
+  activeApplications: ActiveApplicationRecord[];
+  upcomingRound: UpcomingRoundRecord | null;
 };
 
 export type GetDashboardStatsOptions = {

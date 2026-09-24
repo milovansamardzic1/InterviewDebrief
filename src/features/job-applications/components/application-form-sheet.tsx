@@ -31,8 +31,9 @@ import {
   toApplicationRequestPayload,
   type ApplicationFormValues,
 } from "@/features/job-applications/lib/application-form-schema";
+import { useControllableOpen } from "@/features/job-applications/lib/use-controllable-open";
 
-type ApplicationFormSheetProps =
+type ApplicationFormSheetProps = (
   | {
       mode: "create";
       applicationSources: ApplicationSourceItem[];
@@ -41,11 +42,21 @@ type ApplicationFormSheetProps =
       mode: "edit";
       application: ApplicationDetail;
       applicationSources: ApplicationSourceItem[];
-    };
+    }
+) & {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  /** Where to go after a successful create. Default: new application detail. */
+  redirectOnCreate?: "detail" | "home" | "none";
+};
 
 export function ApplicationFormSheet(props: ApplicationFormSheetProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useControllableOpen({
+    open: props.open,
+    onOpenChange: props.onOpenChange,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEdit = props.mode === "edit";
@@ -92,27 +103,34 @@ export function ApplicationFormSheet(props: ApplicationFormSheetProps) {
       return;
     }
 
-    router.push(`/applications/${result.application.id}`);
+    const redirect = props.redirectOnCreate ?? "detail";
+    if (redirect === "detail") {
+      router.push(`/applications/${result.application.id}`);
+    } else if (redirect === "home") {
+      router.push("/");
+    }
     router.refresh();
   }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={isEdit ? <Button variant="outline" size="sm" /> : <Button />}
-      >
-        {isEdit ? (
-          <>
-            <Pencil />
-            Izmeni
-          </>
-        ) : (
-          <>
-            <Plus />
-            Nova prijava
-          </>
-        )}
-      </SheetTrigger>
+      {props.hideTrigger ? null : (
+        <SheetTrigger
+          render={isEdit ? <Button variant="outline" size="sm" /> : <Button />}
+        >
+          {isEdit ? (
+            <>
+              <Pencil />
+              Izmeni
+            </>
+          ) : (
+            <>
+              <Plus />
+              Nova prijava
+            </>
+          )}
+        </SheetTrigger>
+      )}
 
       <SheetContent className="flex w-full flex-col gap-0 sm:max-w-lg">
         <SheetHeader>
